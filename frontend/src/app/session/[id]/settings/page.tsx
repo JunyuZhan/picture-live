@@ -47,42 +47,44 @@ interface SessionSettingsForm {
   tags: string
 }
 
-// 模拟数据
-const mockSession: Session = {
-  id: '1',
-  title: '婚礼现场拍摄',
-  description: '张先生和李女士的婚礼现场照片直播',
-  accessCode: 'WEDDING2024',
-  status: 'active',
-  type: 'event',
-    photographer: {
-    id: 'user1',
-    username: 'photographer1',
-    displayName: '专业摄影师',
-    avatar: null,
-  },
-  settings: {
-    isPublic: true,
-    allowDownload: true,
-    allowComments: true,
-    allowLikes: true,
-    requireApproval: false,
-    watermarkEnabled: true,
-    autoApprove: true,
-    maxPhotos: 1000,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['婚礼', '现场', '直播'],
-  },
-  stats: {
-    photoCount: 45,
-    viewCount: 128,
-    likeCount: 89,
-    commentCount: 23,
-    downloadCount: 67,
-    viewerCount: 12,
-  },
-  createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  updatedAt: new Date().toISOString(),
+// 从API获取会话数据
+const fetchSession = async (sessionId: string): Promise<Session> => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch session')
+    }
+    
+    const data = await response.json()
+    return data.data.session
+  } catch (error) {
+    console.error('Error fetching session:', error)
+    throw error
+  }
+}
+
+// 更新会话设置
+const updateSession = async (sessionId: string, updates: any): Promise<Session> => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates)
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to update session')
+    }
+    
+    const data = await response.json()
+    return data.data.session
+  } catch (error) {
+    console.error('Error updating session:', error)
+    throw error
+  }
 }
 
 export default function SessionSettingsPage() {
@@ -113,22 +115,22 @@ export default function SessionSettingsPage() {
       try {
         setIsLoading(true)
         // 这里应该调用API获取会话详情
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setSession(mockSession)
+        const sessionData = await fetchSession(sessionId)
+        setSession(sessionData)
         
         // 设置表单默认值
-        setValue('title', mockSession.title)
-        setValue('description', mockSession.description)
-        setValue('isPublic', mockSession.settings.isPublic)
-        setValue('allowDownload', mockSession.settings.allowDownload)
-        setValue('allowComments', mockSession.settings.allowComments)
-        setValue('allowLikes', mockSession.settings.allowLikes)
-        setValue('requireApproval', mockSession.settings.requireApproval)
-        setValue('watermarkEnabled', mockSession.settings.watermarkEnabled)
-        setValue('autoApprove', mockSession.settings.autoApprove)
-        setValue('maxPhotos', mockSession.settings.maxPhotos)
-        setValue('expiresAt', mockSession.settings.expiresAt?.split('T')[0] || '')
-        setValue('tags', mockSession.settings.tags.join(', '))
+        setValue('title', sessionData.title)
+        setValue('description', sessionData.description)
+        setValue('isPublic', sessionData.settings.isPublic)
+        setValue('allowDownload', sessionData.settings.allowDownload)
+        setValue('allowComments', sessionData.settings.allowComments)
+        setValue('allowLikes', sessionData.settings.allowLikes)
+        setValue('requireApproval', sessionData.settings.requireApproval)
+        setValue('watermarkEnabled', sessionData.settings.watermarkEnabled)
+        setValue('autoApprove', sessionData.settings.autoApprove)
+        setValue('maxPhotos', sessionData.settings.maxPhotos)
+        setValue('expiresAt', sessionData.settings.expiresAt?.split('T')[0] || '')
+        setValue('tags', sessionData.settings.tags.join(', '))
       } catch (error) {
         console.error('Load session failed:', error)
         toast.error('加载会话失败')
@@ -167,15 +169,13 @@ export default function SessionSettingsPage() {
       }
 
       // 这里应该调用API更新会话设置
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setSession(prev => prev ? {
-        ...prev,
+      const updatedSession = await updateSession(sessionId, {
         title: data.title,
         description: data.description,
-        settings: updatedSettings,
-        updatedAt: new Date().toISOString(),
-      } : null)
+        settings: updatedSettings
+      })
+      
+      setSession(updatedSession)
       
       toast.success('设置已保存')
     } catch (error) {
@@ -190,7 +190,13 @@ export default function SessionSettingsPage() {
     try {
       setIsDeleting(true)
       // 这里应该调用API删除会话
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete session')
+      }
       toast.success('会话已删除')
       router.push('/dashboard')
     } catch (error) {

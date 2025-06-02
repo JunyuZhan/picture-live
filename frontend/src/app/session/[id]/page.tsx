@@ -40,96 +40,30 @@ import { Session, Photo } from '@/types/session'
 import { SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
 
-// 模拟数据
-const mockSession: Session = {
-  id: '1',
-  title: '婚礼现场拍摄',
-  description: '张先生和李女士的婚礼现场照片直播',
-  accessCode: 'WEDDING2024',
-  status: 'active',
-  type: 'event',
-    photographer: {
-    id: 'user1',
-    username: 'photographer1',
-    displayName: '专业摄影师',
-    avatar: null,
-  },
-  settings: {
-    isPublic: true,
-    allowDownload: true,
-    allowComments: true,
-    allowLikes: true,
-    watermark: {
-        enabled: true,
-        position: 'bottom-right' as const,
-        opacity: 0.7,
-      },
-    autoApprove: true,
-    maxPhotos: 1000,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['婚礼', '现场', '直播'],
-  },
-  stats: {
-    photoCount: 45,
-    viewCount: 128,
-    likeCount: 89,
-    commentCount: 23,
-    downloadCount: 67,
-    viewerCount: 12,
-  },
-  createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  updatedAt: new Date().toISOString(),
-}
-
-const mockPhotos: Photo[] = Array.from({ length: 45 }, (_, i) => ({
-  id: `photo-${i + 1}`,
-  sessionId: '1',
-  filename: `IMG_${String(i + 1).padStart(4, '0')}.jpg`,
-  metadata: {
-    size: Math.floor(Math.random() * 5000000) + 1000000,
-    width: 1920,
-    height: 1080,
-    format: 'jpeg',
-    exif: {
-      camera: 'Canon EOS R5',
-      lens: 'RF 24-70mm f/2.8L IS USM',
-      focalLength: Math.floor(Math.random() * 46) + 24,
-      aperture: 'f/2.8',
-      shutterSpeed: '1/125',
-      iso: Math.floor(Math.random() * 1600) + 100,
-      takenAt: new Date(Date.now() - Math.random() * 2 * 60 * 60 * 1000).toISOString(),
-    },
-    aiAnalysis: {
-      tags: ['人物', '室内', '婚礼'],
-      faces: Math.floor(Math.random() * 5) + 1,
-      quality: Math.random() * 0.3 + 0.7,
-    },
-  },
-  urls: {
-    thumbnail: `https://picsum.photos/300/200?random=${i + 1}`,
-    small: `https://picsum.photos/800/600?random=${i + 1}`,
-    medium: `https://picsum.photos/1200/800?random=${i + 1}`,
-    large: `https://picsum.photos/1920/1080?random=${i + 1}`,
-    original: `https://picsum.photos/3840/2160?random=${i + 1}`,
-    watermarked: `https://picsum.photos/1920/1080?random=${i + 1}`,
-  },
-  status: 'approved',
-  isApproved: true,
-  isFeatured: Math.random() > 0.8,
-  stats: {
-    views: Math.floor(Math.random() * 50) + 1,
-    likes: Math.floor(Math.random() * 20),
-    comments: Math.floor(Math.random() * 10),
-    downloads: Math.floor(Math.random() * 15),
-  },
-  uploadedBy: {
-    id: 'user1',
-    username: 'photographer1',
-    displayName: '专业摄影师',
-  },
-  uploadedAt: new Date(Date.now() - Math.random() * 2 * 60 * 60 * 1000).toISOString(),
-  updatedAt: new Date().toISOString(),
-}))
+// 从API获取会话和照片数据
+  const fetchSessionData = async (sessionId: string) => {
+    try {
+      const [sessionResponse, photosResponse] = await Promise.all([
+        fetch(`http://localhost:3001/api/sessions/${sessionId}`),
+        fetch(`http://localhost:3001/api/sessions/${sessionId}/photos`)
+      ])
+      
+      if (!sessionResponse.ok || !photosResponse.ok) {
+        throw new Error('Failed to fetch session data')
+      }
+      
+      const sessionData = await sessionResponse.json()
+      const photosData = await photosResponse.json()
+      
+      return {
+        session: sessionData.data.session,
+        photos: photosData.data.photos || []
+      }
+    } catch (error) {
+      console.error('Error fetching session data:', error)
+      throw error
+    }
+  }
 
 export default function SessionPage() {
   const [session, setSession] = useState<Session | null>(null)
@@ -151,10 +85,9 @@ export default function SessionPage() {
     const loadSession = async () => {
       try {
         setIsLoading(true)
-        // 这里应该调用API获取会话详情
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setSession(mockSession)
-        setPhotos(mockPhotos)
+        const { session, photos } = await fetchSessionData(sessionId)
+        setSession(session)
+        setPhotos(photos)
       } catch (error) {
         console.error('Load session failed:', error)
         toast.error('加载会话失败')

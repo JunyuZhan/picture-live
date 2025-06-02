@@ -108,10 +108,42 @@ export default function CreateSessionPage() {
 
       // 这里应该调用API创建会话
       console.log('Creating session:', createData)
-      await new Promise(resolve => setTimeout(resolve, 2000)) // 模拟API调用
+      // 调用真实API创建会话
+      const response = await fetch('http://localhost:3001/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: data.title,
+          description: data.description,
+          type: data.type,
+          settings: {
+            isPublic: data.isPublic,
+            allowDownload: data.allowDownload,
+            allowComments: data.allowComments,
+            allowLikes: data.allowLikes,
+            requireApproval: data.requireApproval,
+            watermarkEnabled: data.watermarkEnabled,
+            autoApprove: data.autoApprove,
+            maxPhotos: data.maxPhotos,
+            expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : null,
+            tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+          }
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to create session')
+      }
+      
+      const result = await response.json()
+      const sessionId = result.data.session.id
       
       toast.success('会话创建成功！')
-      router.push('/dashboard')
+      
+      // 重定向到新创建的会话页面
+      router.push(`/session/${sessionId}`)
     } catch (error: any) {
       console.error('Create session failed:', error)
       toast.error(error.response?.data?.message || '创建会话失败，请稍后重试')

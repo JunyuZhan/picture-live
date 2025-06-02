@@ -31,129 +31,28 @@ import { Session } from '@/types/session'
 import { SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
 
-// 模拟数据
-const mockSessions: Session[] = [
-  {
-    id: '1',
-    title: '婚礼现场拍摄',
-    description: '张先生和李女士的婚礼现场照片直播',
-    accessCode: 'WEDDING2024',
-    status: 'live',
-    type: 'event',
-    photographer: {
-      id: 'user1',
-      username: 'photographer1',
-      displayName: '专业摄影师',
-      avatar: null,
-    },
-    settings: {
-      isPublic: true,
-      allowDownload: true,
-      allowComments: true,
-      allowLikes: true,
-      watermark: {
-        enabled: true,
-        position: 'bottom-right' as const,
-        opacity: 0.7,
+// 从API获取会话数据
+const fetchSessions = async (): Promise<Session[]> => {
+  try {
+    const response = await fetch('http://localhost:3001/api/sessions', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      autoApprove: true,
-      maxPhotos: 1000,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ['婚礼', '现场', '直播'],
-    },
-    stats: {
-      totalPhotos: 45,
-      totalViews: 128,
-      totalLikes: 89,
-      totalComments: 23,
-      totalDownloads: 67,
-      activeViewers: 12,
-      peakViewers: 15,
-    },
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: '生日派对记录',
-    description: '小明10岁生日派对照片分享',
-    accessCode: 'BIRTHDAY10',
-    status: 'paused',
-    type: 'portrait',
-    photographer: {
-      id: 'user1',
-      username: 'photographer1',
-      displayName: '专业摄影师',
-      avatar: null,
-    },
-    settings: {
-      isPublic: false,
-      allowDownload: true,
-      allowComments: true,
-      allowLikes: true,
-      watermark: {
-        enabled: false,
-        position: 'bottom-right' as const,
-        opacity: 0.7,
-      },
-      autoApprove: false,
-      maxPhotos: 200,
-      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ['生日', '派对', '儿童'],
-    },
-    stats: {
-      totalPhotos: 23,
-      totalViews: 56,
-      totalLikes: 34,
-      totalComments: 12,
-      totalDownloads: 18,
-      activeViewers: 8,
-      peakViewers: 12,
-    },
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: '企业年会摄影',
-    description: '2024年度企业年会现场记录',
-    accessCode: 'COMPANY2024',
-    status: 'ended',
-    type: 'event',
-    photographer: {
-      id: 'user1',
-      username: 'photographer1',
-      displayName: '专业摄影师',
-      avatar: null,
-    },
-    settings: {
-      isPublic: true,
-      allowDownload: false,
-      allowComments: true,
-      allowLikes: true,
-      watermark: {
-        enabled: true,
-        position: 'bottom-right' as const,
-        opacity: 0.7,
-      },
-      autoApprove: false,
-      maxPhotos: 500,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ['企业', '年会', '活动'],
-    },
-    stats: {
-      totalPhotos: 156,
-      totalViews: 342,
-      totalLikes: 198,
-      totalComments: 45,
-      totalDownloads: 0,
-      activeViewers: 0,
-      peakViewers: 25,
-    },
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-]
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch sessions')
+    }
+    
+    const data = await response.json()
+    return data.data.sessions || []
+  } catch (error) {
+    console.error('Error fetching sessions:', error)
+    toast.error('获取会话列表失败')
+    return []
+  }
+}
 
 export default function DashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([])
@@ -162,15 +61,14 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // 模拟加载数据
+    // 加载会话数据
     const loadSessions = async () => {
       try {
         setIsLoading(true)
-        // 这里应该调用API获取用户的会话列表
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setSessions(mockSessions)
+        const sessions = await fetchSessions()
+        setSessions(sessions)
       } catch (error) {
-        console.error('Load sessions failed:', error)
+        console.error('Error loading sessions:', error)
         toast.error('加载会话列表失败')
       } finally {
         setIsLoading(false)
