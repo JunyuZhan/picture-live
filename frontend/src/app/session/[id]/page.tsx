@@ -36,7 +36,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/providers/auth-provider'
 import { useSession } from '@/components/providers/session-provider'
-import { Session, Photo, SessionStatus } from '@/types/session'
+import { Session, Photo } from '@/types/session'
+import { SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
 
 // 模拟数据
@@ -46,9 +47,8 @@ const mockSession: Session = {
   description: '张先生和李女士的婚礼现场照片直播',
   accessCode: 'WEDDING2024',
   status: 'active',
-  type: 'public',
-  photographerId: 'user1',
-  photographer: {
+  type: 'event',
+    photographer: {
     id: 'user1',
     username: 'photographer1',
     displayName: '专业摄影师',
@@ -59,8 +59,11 @@ const mockSession: Session = {
     allowDownload: true,
     allowComments: true,
     allowLikes: true,
-    requireApproval: false,
-    watermarkEnabled: true,
+    watermark: {
+        enabled: true,
+        position: 'bottom-right' as const,
+        opacity: 0.7,
+      },
     autoApprove: true,
     maxPhotos: 1000,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -201,13 +204,13 @@ export default function SessionPage() {
           }
           break
         case 'delete':
-          if (user?.id === session?.photographerId) {
+          if (user?.id === session?.photographer?.id) {
             setPhotos(prev => prev.filter(p => p.id !== photoId))
             toast.success('照片已删除')
           }
           break
         case 'feature':
-          if (user?.id === session?.photographerId) {
+          if (user?.id === session?.photographer?.id) {
             setPhotos(prev => prev.map(p => 
               p.id === photoId 
                 ? { ...p, isFeatured: !p.isFeatured }
@@ -263,7 +266,7 @@ export default function SessionPage() {
     )
   }
 
-  const isPhotographer = user?.id === session.photographerId
+  const isPhotographer = user?.id === session.photographer?.id
 
   return (
     <div className="min-h-screen bg-gray-50">

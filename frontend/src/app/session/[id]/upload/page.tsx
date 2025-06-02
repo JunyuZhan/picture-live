@@ -45,9 +45,8 @@ const mockSession: Session = {
   description: '张先生和李女士的婚礼现场照片直播',
   accessCode: 'WEDDING2024',
   status: 'active',
-  type: 'public',
-  photographerId: 'user1',
-  photographer: {
+  type: 'event',
+    photographer: {
     id: 'user1',
     username: 'photographer1',
     displayName: '专业摄影师',
@@ -58,8 +57,11 @@ const mockSession: Session = {
     allowDownload: true,
     allowComments: true,
     allowLikes: true,
-    requireApproval: false,
-    watermarkEnabled: true,
+    watermark: {
+        enabled: true,
+        position: 'bottom-right' as const,
+        opacity: 0.7,
+      },
     autoApprove: true,
     maxPhotos: 1000,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -110,7 +112,7 @@ export default function UploadPage() {
 
   // 检查权限
   useEffect(() => {
-    if (session && user?.id !== session.photographerId) {
+    if (session && user?.id !== session.photographer?.id) {
       toast.error('您没有权限访问此页面')
       router.push(`/session/${sessionId}`)
     }

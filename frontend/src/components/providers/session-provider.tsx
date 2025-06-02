@@ -466,13 +466,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   )
 }
 
-export const useSession = () => {
-  const context = useContext(SessionContext)
-  if (context === undefined) {
-    throw new Error('useSession must be used within a SessionProvider')
-  }
-  return context
-}
+
 
 // HOC for protecting routes that require an active session
 export const withSession = <P extends object>(Component: React.ComponentType<P>) => {

@@ -27,7 +27,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/providers/auth-provider'
-import { Session, SessionStatus } from '@/types/session'
+import { Session } from '@/types/session'
+import { SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
 
 // 模拟数据
@@ -37,9 +38,8 @@ const mockSessions: Session[] = [
     title: '婚礼现场拍摄',
     description: '张先生和李女士的婚礼现场照片直播',
     accessCode: 'WEDDING2024',
-    status: 'active',
-    type: 'public',
-    photographerId: 'user1',
+    status: 'live',
+    type: 'event',
     photographer: {
       id: 'user1',
       username: 'photographer1',
@@ -51,20 +51,24 @@ const mockSessions: Session[] = [
       allowDownload: true,
       allowComments: true,
       allowLikes: true,
-      requireApproval: false,
-      watermarkEnabled: true,
+      watermark: {
+        enabled: true,
+        position: 'bottom-right' as const,
+        opacity: 0.7,
+      },
       autoApprove: true,
       maxPhotos: 1000,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       tags: ['婚礼', '现场', '直播'],
     },
     stats: {
-      photoCount: 45,
-      viewCount: 128,
-      likeCount: 89,
-      commentCount: 23,
-      downloadCount: 67,
-      viewerCount: 12,
+      totalPhotos: 45,
+      totalViews: 128,
+      totalLikes: 89,
+      totalComments: 23,
+      totalDownloads: 67,
+      activeViewers: 12,
+      peakViewers: 15,
     },
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date().toISOString(),
@@ -75,8 +79,7 @@ const mockSessions: Session[] = [
     description: '小明10岁生日派对照片分享',
     accessCode: 'BIRTHDAY10',
     status: 'paused',
-    type: 'private',
-    photographerId: 'user1',
+    type: 'portrait',
     photographer: {
       id: 'user1',
       username: 'photographer1',
@@ -88,20 +91,24 @@ const mockSessions: Session[] = [
       allowDownload: true,
       allowComments: true,
       allowLikes: true,
-      requireApproval: true,
-      watermarkEnabled: false,
+      watermark: {
+        enabled: false,
+        position: 'bottom-right' as const,
+        opacity: 0.7,
+      },
       autoApprove: false,
       maxPhotos: 200,
       expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
       tags: ['生日', '派对', '儿童'],
     },
     stats: {
-      photoCount: 23,
-      viewCount: 56,
-      likeCount: 34,
-      commentCount: 12,
-      downloadCount: 18,
-      viewerCount: 8,
+      totalPhotos: 23,
+      totalViews: 56,
+      totalLikes: 34,
+      totalComments: 12,
+      totalDownloads: 18,
+      activeViewers: 8,
+      peakViewers: 12,
     },
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
@@ -112,8 +119,7 @@ const mockSessions: Session[] = [
     description: '2024年度企业年会现场记录',
     accessCode: 'COMPANY2024',
     status: 'ended',
-    type: 'public',
-    photographerId: 'user1',
+    type: 'event',
     photographer: {
       id: 'user1',
       username: 'photographer1',
@@ -125,20 +131,24 @@ const mockSessions: Session[] = [
       allowDownload: false,
       allowComments: true,
       allowLikes: true,
-      requireApproval: true,
-      watermarkEnabled: true,
+      watermark: {
+        enabled: true,
+        position: 'bottom-right' as const,
+        opacity: 0.7,
+      },
       autoApprove: false,
       maxPhotos: 500,
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       tags: ['企业', '年会', '活动'],
     },
     stats: {
-      photoCount: 156,
-      viewCount: 342,
-      likeCount: 198,
-      commentCount: 45,
-      downloadCount: 0,
-      viewerCount: 0,
+      totalPhotos: 156,
+      totalViews: 342,
+      totalLikes: 198,
+      totalComments: 45,
+      totalDownloads: 0,
+      activeViewers: 0,
+      peakViewers: 25,
     },
     createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -172,14 +182,18 @@ export default function DashboardPage() {
 
   const getStatusBadge = (status: SessionStatus) => {
     switch (status) {
-      case 'active':
+      case 'live':
         return <Badge className="bg-green-100 text-green-800">进行中</Badge>
       case 'paused':
         return <Badge className="bg-yellow-100 text-yellow-800">已暂停</Badge>
       case 'ended':
         return <Badge className="bg-gray-100 text-gray-800">已结束</Badge>
+      case 'scheduled':
+        return <Badge className="bg-blue-100 text-blue-800">已安排</Badge>
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800">已取消</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge className="bg-blue-100 text-blue-800">未知</Badge>
     }
   }
 

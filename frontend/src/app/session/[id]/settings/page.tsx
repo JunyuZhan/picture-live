@@ -54,9 +54,8 @@ const mockSession: Session = {
   description: '张先生和李女士的婚礼现场照片直播',
   accessCode: 'WEDDING2024',
   status: 'active',
-  type: 'public',
-  photographerId: 'user1',
-  photographer: {
+  type: 'event',
+    photographer: {
     id: 'user1',
     username: 'photographer1',
     displayName: '专业摄影师',
@@ -144,7 +143,7 @@ export default function SessionSettingsPage() {
 
   // 检查权限
   useEffect(() => {
-    if (session && user?.id !== session.photographerId) {
+    if (session && user?.id !== session.photographer?.id) {
       toast.error('您没有权限访问此页面')
       router.push(`/session/${sessionId}`)
     }

@@ -33,7 +33,7 @@ import { CreateSessionRequest } from '@/types/session'
 interface CreateSessionFormData {
   title: string
   description: string
-  type: 'public' | 'private'
+  type: 'wedding' | 'event' | 'portrait' | 'commercial' | 'other'
   settings: {
     isPublic: boolean
     allowDownload: boolean
@@ -64,7 +64,7 @@ export default function CreateSessionPage() {
     defaultValues: {
       title: '',
       description: '',
-      type: 'public',
+      type: 'event',
       settings: {
         isPublic: true,
         allowDownload: true,
