@@ -5,7 +5,6 @@ const nextConfig = {
   
   // 实验性功能
   experimental: {
-    appDir: true,
     serverComponentsExternalPackages: ['sharp']
   },
   
@@ -146,7 +145,7 @@ const nextConfig = {
   i18n: {
     locales: ['zh-CN', 'en-US'],
     defaultLocale: 'zh-CN',
-    localeDetection: true
+    localeDetection: false
   }
 }
 

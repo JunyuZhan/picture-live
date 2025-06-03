@@ -97,7 +97,7 @@ export default function DashboardPage() {
 
   const getStatusIcon = (status: SessionStatus) => {
     switch (status) {
-      case 'active':
+      case 'live':
         return <Play className="h-4 w-4 text-green-600" />
       case 'paused':
         return <Pause className="h-4 w-4 text-yellow-600" />
@@ -119,7 +119,7 @@ export default function DashboardPage() {
 
       switch (action) {
         case 'resume':
-          newStatus = 'active'
+          newStatus = 'live'
           message = '会话已恢复'
           break
         case 'pause':
@@ -184,7 +184,7 @@ export default function DashboardPage() {
               <Badge variant="outline">摄影师仪表板</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">欢迎，{user.displayName}</span>
+              <span className="text-sm text-gray-600">欢迎，{user.name}</span>
               <Button
                 onClick={() => router.push('/session/create')}
                 className="flex items-center space-x-2"
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">活跃会话</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {sessions.filter(s => s.status === 'active').length}
+                    {sessions.filter(s => s.status === 'live').length}
                   </p>
                 </div>
                 <Play className="h-8 w-8 text-green-600" />
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">总照片数</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {sessions.reduce((sum, s) => sum + s.stats.photoCount, 0)}
+                    {sessions.reduce((sum, s) => sum + s.stats.totalPhotos, 0)}
                   </p>
                 </div>
                 <Camera className="h-8 w-8 text-blue-600" />
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">总观看数</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {sessions.reduce((sum, s) => sum + s.stats.viewCount, 0)}
+                    {sessions.reduce((sum, s) => sum + s.stats.totalViews, 0)}
                   </p>
                 </div>
                 <Eye className="h-8 w-8 text-purple-600" />
@@ -302,8 +302,8 @@ export default function DashboardPage() {
                             {session.title}
                           </h3>
                           {getStatusBadge(session.status)}
-                          <Badge variant={session.type === 'public' ? 'default' : 'secondary'}>
-                            {session.type === 'public' ? '公开' : '私密'}
+                          <Badge variant={session.settings.isPublic ? 'default' : 'secondary'}>
+                            {session.settings.isPublic ? '公开' : '私密'}
                           </Badge>
                         </div>
                         <p className="text-gray-600 mb-4">{session.description}</p>
@@ -329,37 +329,37 @@ export default function DashboardPage() {
                           <div className="flex items-center space-x-2">
                             <Camera className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.photoCount} 张照片
+                              {session.stats.totalPhotos} 张照片
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Eye className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.viewCount} 次观看
+                              {session.stats.totalViews} 次观看
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Heart className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.likeCount} 个赞
+                              {session.stats.totalLikes} 个赞
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <MessageCircle className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.commentCount} 条评论
+                              {session.stats.totalComments} 条评论
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Download className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.downloadCount} 次下载
+                              {session.stats.totalDownloads}  次下载
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Users className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.viewerCount} 在线
+                              {session.stats.activeViewers} 在线
                             </span>
                           </div>
                         </div>
@@ -406,7 +406,7 @@ export default function DashboardPage() {
                         </Button>
                         
                         {/* 状态控制按钮 */}
-                        {session.status === 'active' && (
+                        {session.status === 'live' && (
                           <>
                             <Button
                               size="sm"

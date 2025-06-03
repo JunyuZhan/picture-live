@@ -125,8 +125,8 @@ export default function SessionSettingsPage() {
         setValue('allowDownload', sessionData.settings.allowDownload)
         setValue('allowComments', sessionData.settings.allowComments)
         setValue('allowLikes', sessionData.settings.allowLikes)
-        setValue('requireApproval', sessionData.settings.requireApproval)
-        setValue('watermarkEnabled', sessionData.settings.watermarkEnabled)
+        setValue('requireApproval', sessionData.settings.autoApprove)
+        setValue('watermarkEnabled', sessionData.settings.watermark.enabled)
         setValue('autoApprove', sessionData.settings.autoApprove)
         setValue('maxPhotos', sessionData.settings.maxPhotos)
         setValue('expiresAt', sessionData.settings.expiresAt?.split('T')[0] || '')
@@ -160,11 +160,15 @@ export default function SessionSettingsPage() {
         allowDownload: data.allowDownload,
         allowComments: data.allowComments,
         allowLikes: data.allowLikes,
-        requireApproval: data.requireApproval,
-        watermarkEnabled: data.watermarkEnabled,
+        watermark: {
+          enabled: data.watermarkEnabled,
+          text: '',
+          position: 'bottom-right',
+          opacity: 0.5
+        },
         autoApprove: data.autoApprove,
         maxPhotos: data.maxPhotos,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : null,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : undefined,
         tags: data.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
       }
 
@@ -213,7 +217,7 @@ export default function SessionSettingsPage() {
       // 这里应该调用API执行会话操作
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const newStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'ended'
+      const newStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'live' : 'ended'
       setSession(prev => prev ? { ...prev, status: newStatus as any } : null)
       
       const actionText = action === 'pause' ? '暂停' : action === 'resume' ? '恢复' : '结束'
@@ -272,9 +276,9 @@ export default function SessionSettingsPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant={session.status === 'active' ? 'default' : 'secondary'}>
-                {session.status === 'active' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
-              </Badge>
+              <Badge variant={session.status === 'live' ? 'default' : 'secondary'}>
+              {session.status === 'live' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
+            </Badge>
             </div>
           </div>
         </div>
@@ -579,14 +583,14 @@ export default function SessionSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <Badge 
-                    variant={session.status === 'active' ? 'default' : 'secondary'}
+                    variant={session.status === 'live' ? 'default' : 'secondary'}
                     className="text-lg px-4 py-2"
                   >
-                    {session.status === 'active' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
+                    {session.status === 'live' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
                   </Badge>
                 </div>
                 
-                {session.status === 'active' && (
+                {session.status === 'live' && (
                   <div className="space-y-2">
                     <Button
                       variant="outline"
@@ -633,27 +637,27 @@ export default function SessionSettingsPage() {
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">照片数量</span>
-                  <span className="font-medium">{session.stats.photoCount}</span>
+                  <span className="font-medium">{session.stats.totalPhotos}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">总观看</span>
-                  <span className="font-medium">{session.stats.viewCount}</span>
+                  <span className="font-medium">{session.stats.totalViews}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">总点赞</span>
-                  <span className="font-medium">{session.stats.likeCount}</span>
+                  <span className="font-medium">{session.stats.totalLikes}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">总评论</span>
-                  <span className="font-medium">{session.stats.commentCount}</span>
+                  <span className="font-medium">{session.stats.totalComments}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">总下载</span>
-                  <span className="font-medium">{session.stats.downloadCount}</span>
+                  <span className="font-medium">{session.stats.totalDownloads}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">在线观众</span>
-                  <span className="font-medium">{session.stats.viewerCount}</span>
+                  <span className="font-medium">{session.stats.activeViewers}</span>
                 </div>
               </CardContent>
             </Card>

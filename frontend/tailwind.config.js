@@ -209,9 +209,9 @@ module.exports = {
     }
   },
   plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/aspect-ratio'),
+    // require('@tailwindcss/forms'), // Temporarily disabled due to installation issues
+    // require('@tailwindcss/typography'), // Temporarily disabled due to installation issues
+    // require('@tailwindcss/aspect-ratio'), // Temporarily disabled due to installation issues
     // 自定义插件
     function({ addUtilities, addComponents, theme }) {
       // 添加自定义工具类

@@ -102,13 +102,13 @@ export default function SessionPage() {
 
   const filteredPhotos = photos.filter(photo => {
     const matchesSearch = photo.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      photo.metadata.aiAnalysis?.tags.some(tag => 
+      photo.metadata.ai?.tags.some(tag => 
         tag.toLowerCase().includes(searchQuery.toLowerCase())
       )
     
     const matchesFilter = filterStatus === 'all' || 
       (filterStatus === 'featured' && photo.isFeatured) ||
-      (filterStatus === 'recent' && new Date(photo.uploadedAt) > new Date(Date.now() - 60 * 60 * 1000))
+      (filterStatus === 'recent' && new Date(photo.createdAt) > new Date(Date.now() - 60 * 60 * 1000))
     
     return matchesSearch && matchesFilter
   })
@@ -214,8 +214,8 @@ export default function SessionPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant={session.status === 'active' ? 'default' : 'secondary'}>
-                {session.status === 'active' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
+              <Badge variant={session.status === 'live' ? 'default' : 'secondary'}>
+              {session.status === 'live' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
               </Badge>
               <Button
                 variant="outline"
@@ -270,11 +270,11 @@ export default function SessionPage() {
                 </div>
                 <div className="flex items-center space-x-1">
                   <Camera className="h-4 w-4" />
-                  <span>{session.stats.photoCount} 张照片</span>
+                  <span>{session.stats.totalPhotos} 张照片</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users className="h-4 w-4" />
-                  <span>{session.stats.viewerCount} 在线观众</span>
+                  <span>{session.stats.activeViewers} 在线观众</span>
                 </div>
               </div>
 
@@ -292,19 +292,19 @@ export default function SessionPage() {
             {/* 统计信息 */}
             <div className="grid grid-cols-2 gap-4 ml-8">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{session.stats.viewCount}</div>
+                <div className="text-2xl font-bold text-primary">{session.stats.totalViews}</div>
                 <div className="text-xs text-gray-500">总观看</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-500">{session.stats.likeCount}</div>
+                <div className="text-2xl font-bold text-red-500">{session.stats.totalLikes}</div>
                 <div className="text-xs text-gray-500">总点赞</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">{session.stats.commentCount}</div>
+                <div className="text-2xl font-bold text-blue-500">{session.stats.totalComments}</div>
                 <div className="text-xs text-gray-500">总评论</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">{session.stats.downloadCount}</div>
+                <div className="text-2xl font-bold text-green-500">{session.stats.totalDownloads}</div>
                 <div className="text-xs text-gray-500">总下载</div>
               </div>
             </div>
@@ -408,7 +408,7 @@ export default function SessionPage() {
                     </div>
                     <div className="p-3">
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{formatTime(photo.uploadedAt)}</span>
+                        <span>{formatTime(photo.createdAt)}</span>
                         <div className="flex items-center space-x-2">
                           <span className="flex items-center space-x-1">
                             <Heart className="h-3 w-3" />
@@ -443,7 +443,7 @@ export default function SessionPage() {
                         {photo.metadata.exif?.camera} • {photo.metadata.exif?.lens}
                       </p>
                       <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                        <span>{formatTime(photo.uploadedAt)}</span>
+                        <span>{formatTime(photo.createdAt)}</span>
                         <span className="flex items-center space-x-1">
                           <Heart className="h-3 w-3" />
                           <span>{photo.stats.likes}</span>

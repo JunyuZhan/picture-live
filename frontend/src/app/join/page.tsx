@@ -31,16 +31,15 @@ export default function JoinSessionPage() {
   } = useForm<JoinSessionFormData>({
     defaultValues: {
       accessCode: '',
-      displayName: user?.displayName || '',
+      displayName: user?.name || '',
     },
   })
 
   const onSubmit = async (data: JoinSessionFormData) => {
     try {
       setIsLoading(true)
-      const session = await joinSession(data.accessCode, data.displayName)
-      toast.success(`成功加入会话：${session.title}`)
-      router.push(`/session/${session.id}`)
+      await joinSession(data.accessCode, data.displayName)
+      toast.success('成功加入会话')
     } catch (error: any) {
       console.error('Join session failed:', error)
       toast.error(error.response?.data?.message || '加入会话失败，请检查访问码')
@@ -147,7 +146,7 @@ export default function JoinSessionPage() {
                       {user.role === 'photographer' ? '摄影师' : '观众'}
                     </Badge>
                     <span className="text-sm text-blue-800">
-                      以 {user.displayName} 身份加入
+                      以 {user.name} 身份加入
                     </span>
                   </div>
                 </div>

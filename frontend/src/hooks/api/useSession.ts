@@ -41,7 +41,7 @@ export function useUserSessions(params?: {
 }) {
   return useQuery({
     queryKey: ['sessions', 'user', params],
-    queryFn: () => sessionApi.getUserSessions(params),
+    queryFn: () => sessionApi.getSessions(params),
     staleTime: 2 * 60 * 1000, // 2分钟
     placeholderData: (previousData) => previousData,
   })
@@ -169,8 +169,9 @@ export function useJoinSession() {
 
   return useMutation({
     mutationFn: ({ accessCode, displayName }: { accessCode: string; displayName?: string }) =>
-      sessionApi.joinSession(accessCode, displayName),
-    onSuccess: async (session: Session) => {
+      sessionApi.joinSession({ sessionId: accessCode, accessCode }),
+    onSuccess: async (response: SessionResponse) => {
+      const session = response.session
       // 设置会话详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
@@ -355,7 +356,7 @@ export function useGenerateInviteLink() {
         maxUses?: number
         requireApproval?: boolean
       }
-    }) => sessionApi.generateInviteLink(sessionId, options),
+    }) => sessionApi.generateInviteLink(sessionId),
     onSuccess: (result) => {
       // 复制到剪贴板
       navigator.clipboard.writeText(result.inviteUrl)

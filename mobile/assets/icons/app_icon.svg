@@ -1,0 +1,52 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景渐变 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="lensGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E3A8A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆角矩形 -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGradient)"/>
+  
+  <!-- 相机机身 -->
+  <rect x="80" y="180" width="352" height="240" rx="24" fill="#374151"/>
+  
+  <!-- 相机镜头外圈 -->
+  <circle cx="256" cy="300" r="120" fill="url(#lensGradient)" stroke="#1E3A8A" stroke-width="4"/>
+  
+  <!-- 相机镜头中圈 -->
+  <circle cx="256" cy="300" r="90" fill="#1E3A8A" stroke="#1E40AF" stroke-width="3"/>
+  
+  <!-- 相机镜头内圈 -->
+  <circle cx="256" cy="300" r="60" fill="#1D4ED8" stroke="#2563EB" stroke-width="2"/>
+  
+  <!-- 镜头中心 -->
+  <circle cx="256" cy="300" r="30" fill="#1E3A8A"/>
+  
+  <!-- 镜头反光 -->
+  <ellipse cx="240" cy="280" rx="20" ry="15" fill="#60A5FA" opacity="0.7"/>
+  
+  <!-- 取景器 -->
+  <rect x="220" y="140" width="72" height="32" rx="8" fill="#1F2937"/>
+  
+  <!-- 快门按钮 -->
+  <circle cx="350" cy="200" r="16" fill="#6B7280"/>
+  <circle cx="350" cy="200" r="12" fill="#9CA3AF"/>
+  
+  <!-- 闪光灯 -->
+  <rect x="160" y="190" width="24" height="16" rx="4" fill="#FCD34D"/>
+  
+  <!-- 直播指示灯 -->
+  <circle cx="380" cy="220" r="12" fill="#EF4444">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 品牌标识 -->
+  <text x="256" y="480" text-anchor="middle" font-family="Inter, sans-serif" font-size="32" font-weight="700" fill="white">PL</text>
+</svg>

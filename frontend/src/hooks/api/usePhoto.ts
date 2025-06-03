@@ -280,10 +280,7 @@ export function useToggleLike() {
           return {
             ...oldData,
             isLiked: result.liked,
-            stats: {
-              ...oldData.stats,
-              likes: result.likes,
-            },
+            likes: result.likes,
           }
         }
         return oldData

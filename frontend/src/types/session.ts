@@ -3,7 +3,7 @@ export interface Session {
   title: string
   description?: string
   accessCode: string
-  status: 'active' | 'paused' | 'ended'
+  status: 'live' | 'paused' | 'ended'
   type: 'wedding' | 'event' | 'portrait' | 'commercial' | 'other'
   settings: SessionSettings
   photographer: {

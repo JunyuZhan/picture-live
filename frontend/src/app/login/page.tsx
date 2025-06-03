@@ -39,7 +39,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true)
-      await login(data.email, data.password)
+      await login({ email: data.email, password: data.password })
     } catch (error: any) {
       console.error('Login failed:', error)
       // 错误处理已在AuthProvider中完成

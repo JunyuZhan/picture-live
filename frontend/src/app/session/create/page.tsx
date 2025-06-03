@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/providers/auth-provider'
-import { CreateSessionRequest } from '@/types/session'
+import { SessionCreateRequest } from '@/types/session'
 
 interface CreateSessionFormData {
   title: string
@@ -92,13 +92,13 @@ export default function CreateSessionPage() {
     try {
       setIsLoading(true)
       
-      const createData: CreateSessionRequest = {
+      const createData: SessionCreateRequest = {
         title: data.title,
         description: data.description,
         type: data.type,
         settings: {
           ...data.settings,
-          isPublic: data.type === 'public',
+          isPublic: data.settings.isPublic,
           expiresAt: new Date(
             Date.now() + data.settings.expirationDays * 24 * 60 * 60 * 1000
           ).toISOString(),
@@ -119,16 +119,22 @@ export default function CreateSessionPage() {
           description: data.description,
           type: data.type,
           settings: {
-            isPublic: data.isPublic,
-            allowDownload: data.allowDownload,
-            allowComments: data.allowComments,
-            allowLikes: data.allowLikes,
-            requireApproval: data.requireApproval,
-            watermarkEnabled: data.watermarkEnabled,
-            autoApprove: data.autoApprove,
-            maxPhotos: data.maxPhotos,
-            expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : null,
-            tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+            isPublic: data.settings.isPublic,
+            allowDownload: data.settings.allowDownload,
+            allowComments: data.settings.allowComments,
+            allowLikes: data.settings.allowLikes,
+            autoApprove: data.settings.autoApprove,
+            watermark: {
+              enabled: data.settings.watermarkEnabled,
+              text: '',
+              position: 'bottom-right',
+              opacity: 0.5
+            },
+            maxPhotos: data.settings.maxPhotos,
+            expiresAt: new Date(
+              Date.now() + data.settings.expirationDays * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            tags: data.settings.tags.map(tag => tag.value).filter(Boolean)
           }
         })
       })
@@ -313,21 +319,21 @@ export default function CreateSessionPage() {
                           <input
                             {...register('type')}
                             type="radio"
-                            value="public"
+                            value="wedding"
                             className="sr-only"
                             disabled={isLoading}
                           />
                           <div className={`p-4 border-2 rounded-lg transition-all ${
-                            watchedType === 'public'
+                            watchedType === 'wedding'
                               ? 'border-primary bg-primary/5'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}>
                             <div className="flex items-center space-x-3">
                               <Globe className="h-6 w-6 text-primary" />
                               <div>
-                                <div className="font-medium">公开会话</div>
+                                <div className="font-medium">婚礼拍摄</div>
                                 <div className="text-sm text-gray-500">
-                                  任何人都可以通过访问码加入
+                                  婚礼现场照片分享
                                 </div>
                               </div>
                             </div>
@@ -337,21 +343,21 @@ export default function CreateSessionPage() {
                           <input
                             {...register('type')}
                             type="radio"
-                            value="private"
+                            value="event"
                             className="sr-only"
                             disabled={isLoading}
                           />
                           <div className={`p-4 border-2 rounded-lg transition-all ${
-                            watchedType === 'private'
+                            watchedType === 'event'
                               ? 'border-primary bg-primary/5'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}>
                             <div className="flex items-center space-x-3">
                               <Lock className="h-6 w-6 text-primary" />
                               <div>
-                                <div className="font-medium">私密会话</div>
+                                <div className="font-medium">活动拍摄</div>
                                 <div className="text-sm text-gray-500">
-                                  仅邀请的用户可以加入
+                                  各类活动现场记录
                                 </div>
                               </div>
                             </div>

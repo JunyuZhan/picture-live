@@ -1,0 +1,27 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 相机镜头外圈 -->
+  <circle cx="60" cy="60" r="50" fill="#2563EB" stroke="#1E40AF" stroke-width="2"/>
+  
+  <!-- 相机镜头内圈 -->
+  <circle cx="60" cy="60" r="35" fill="#1E40AF" stroke="#1D4ED8" stroke-width="1.5"/>
+  
+  <!-- 镜头中心 -->
+  <circle cx="60" cy="60" r="20" fill="#1D4ED8" stroke="#1E3A8A" stroke-width="1"/>
+  
+  <!-- 镜头反光 -->
+  <circle cx="55" cy="55" r="8" fill="#60A5FA" opacity="0.6"/>
+  
+  <!-- 快门按钮 -->
+  <rect x="75" y="25" width="12" height="8" rx="2" fill="#374151"/>
+  
+  <!-- 闪光灯 -->
+  <circle cx="45" cy="30" r="4" fill="#FCD34D"/>
+  
+  <!-- 直播标识 -->
+  <circle cx="85" cy="35" r="6" fill="#EF4444">
+    <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- 应用名称 -->
+  <text x="60" y="100" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#1F2937">Picture Live</text>
+</svg>

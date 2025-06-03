@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
 
     try {
       setIsLoading(true)
-      await authApi.resetPassword(token, data.password)
+      await authApi.resetPassword({ token, password: data.password, confirmPassword: data.confirmPassword })
       setIsSuccess(true)
       toast.success('密码重置成功')
     } catch (error: any) {

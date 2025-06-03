@@ -57,7 +57,7 @@ export function PhotoGrid({
     observerRef.current = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          setVisibleImages(prev => new Set([...prev, photoId]))
+          setVisibleImages(prev => new Set([...Array.from(prev), photoId]))
         }
       })
     }, {
@@ -77,7 +77,7 @@ export function PhotoGrid({
   }, [])
 
   const handleImageError = (photoId: string) => {
-    setImageLoadErrors(prev => new Set([...prev, photoId]))
+    setImageLoadErrors(prev => new Set([...Array.from(prev), photoId]))
   }
 
   const handlePhotoSelect = (photoId: string) => {
@@ -205,10 +205,10 @@ export function PhotoGrid({
                     {photo.isFeatured && (
                       <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     )}
-                    {photo.likeCount > 0 && (
+                    {photo.likes > 0 && (
                       <div className="flex items-center gap-1">
                         <Heart className="w-4 h-4 text-red-400" />
-                        <span className="text-xs">{photo.likeCount}</span>
+                        <span className="text-xs">{photo.likes}</span>
                       </div>
                     )}
                   </div>
@@ -339,7 +339,7 @@ export function PhotoGrid({
                       </div>
                     )}
                     <div className="text-sm text-gray-500">
-                      {formatDistanceToNow(new Date(selectedPhoto.createdAt), {
+                      {formatDistanceToNow(new Date(selectedPhoto.uploadedAt), {
                         addSuffix: true,
                         locale: zhCN
                       })}
@@ -354,7 +354,7 @@ export function PhotoGrid({
                       className={selectedPhoto.isLiked ? 'text-red-600' : ''}
                     >
                       <Heart className={`w-4 h-4 mr-2 ${selectedPhoto.isLiked ? 'fill-current' : ''}`} />
-                      {selectedPhoto.likeCount || 0}
+                      {selectedPhoto.likes || 0}
                     </Button>
                     <Button
                       variant="outline"

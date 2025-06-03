@@ -19,6 +19,7 @@ import {
   RotateCcw,
   Download,
   Loader2,
+  Clock,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
@@ -38,45 +39,21 @@ interface UploadFile {
   isFeatured?: boolean
 }
 
-// 模拟数据
-const mockSession: Session = {
-  id: '1',
-  title: '婚礼现场拍摄',
-  description: '张先生和李女士的婚礼现场照片直播',
-  accessCode: 'WEDDING2024',
-  status: 'active',
-  type: 'event',
-    photographer: {
-    id: 'user1',
-    username: 'photographer1',
-    displayName: '专业摄影师',
-    avatar: null,
-  },
-  settings: {
-    isPublic: true,
-    allowDownload: true,
-    allowComments: true,
-    allowLikes: true,
-    watermark: {
-        enabled: true,
-        position: 'bottom-right' as const,
-        opacity: 0.7,
-      },
-    autoApprove: true,
-    maxPhotos: 1000,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    tags: ['婚礼', '现场', '直播'],
-  },
-  stats: {
-    photoCount: 45,
-    viewCount: 128,
-    likeCount: 89,
-    commentCount: 23,
-    downloadCount: 67,
-    viewerCount: 12,
-  },
-  createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  updatedAt: new Date().toISOString(),
+// 从API获取会话数据
+const fetchSession = async (sessionId: string): Promise<Session> => {
+  try {
+    const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`)
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch session')
+    }
+    
+    const data = await response.json()
+    return data.data.session
+  } catch (error) {
+    console.error('Error fetching session:', error)
+    throw error
+  }
 }
 
 export default function UploadPage() {
@@ -95,9 +72,8 @@ export default function UploadPage() {
     const loadSession = async () => {
       try {
         setIsLoading(true)
-        // 这里应该调用API获取会话详情
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setSession(mockSession)
+        const sessionData = await fetchSession(sessionId)
+        setSession(sessionData)
       } catch (error) {
         console.error('Load session failed:', error)
         toast.error('加载会话失败')
@@ -316,8 +292,8 @@ export default function UploadPage() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant={session.status === 'active' ? 'default' : 'secondary'}>
-                {session.status === 'active' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
+              <Badge variant={session.status === 'live' ? 'default' : 'secondary'}>
+              {session.status === 'live' ? '进行中' : session.status === 'paused' ? '已暂停' : '已结束'}
               </Badge>
             </div>
           </div>
@@ -566,7 +542,7 @@ export default function UploadPage() {
               <CardContent className="space-y-3">
                 <div>
                   <span className="text-gray-600 text-sm">当前照片数</span>
-                  <div className="font-medium">{session.stats.photoCount}</div>
+                  <div className="font-medium">{session.stats.totalPhotos}</div>
                 </div>
                 <div>
                   <span className="text-gray-600 text-sm">最大照片数</span>
@@ -575,10 +551,10 @@ export default function UploadPage() {
                 <div>
                   <span className="text-gray-600 text-sm">剩余空间</span>
                   <div className="font-medium">
-                    {session.settings.maxPhotos - session.stats.photoCount}
+                    {session.settings.maxPhotos - session.stats.totalPhotos}
                   </div>
                 </div>
-                {session.settings.requireApproval && (
+                {!session.settings.autoApprove && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <div className="flex items-center space-x-2">
                       <AlertCircle className="h-4 w-4 text-orange-600" />

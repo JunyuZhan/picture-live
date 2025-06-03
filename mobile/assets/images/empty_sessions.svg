@@ -1,0 +1,44 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景圆 -->
+  <circle cx="100" cy="100" r="90" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="2"/>
+  
+  <!-- 主要图标组 -->
+  <g transform="translate(100, 100)">
+    <!-- 会话气泡1 -->
+    <rect x="-35" y="-25" width="50" height="30" rx="15" fill="#E5E7EB"/>
+    <polygon points="-35,-10 -40,-5 -35,-5" fill="#E5E7EB"/>
+    
+    <!-- 会话气泡2 -->
+    <rect x="-15" y="-5" width="45" height="25" rx="12" fill="#D1D5DB"/>
+    <polygon points="30,-5 35,0 30,0" fill="#D1D5DB"/>
+    
+    <!-- 用户头像图标 -->
+    <circle cx="-50" cy="-10" r="8" fill="#9CA3AF"/>
+    <path d="M-54,-6 C-54,-8 -52,-10 -50,-10 C-48,-10 -46,-8 -46,-6 C-46,-4 -48,-2 -50,-2 C-52,-2 -54,-4 -54,-6 Z" fill="#F9FAFB"/>
+    <path d="M-56,-2 C-56,-4 -53,-6 -50,-6 C-47,-6 -44,-4 -44,-2" stroke="#F9FAFB" stroke-width="1" fill="none"/>
+    
+    <!-- 用户头像图标2 -->
+    <circle cx="45" cy="5" r="8" fill="#9CA3AF"/>
+    <path d="M41,9 C41,7 43,5 45,5 C47,5 49,7 49,9 C49,11 47,13 45,13 C43,13 41,11 41,9 Z" fill="#F9FAFB"/>
+    <path d="M39,13 C39,11 42,9 45,9 C48,9 51,11 51,13" stroke="#F9FAFB" stroke-width="1" fill="none"/>
+  </g>
+  
+  <!-- 直播图标 -->
+  <g transform="translate(100, 140)">
+    <rect x="-15" y="-8" width="30" height="16" rx="4" fill="#FCA5A5"/>
+    <circle cx="12" cy="0" r="3" fill="#EF4444">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="0" y="2" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" fill="white">LIVE</text>
+  </g>
+  
+  <!-- 装饰性元素 -->
+  <circle cx="50" cy="50" r="2" fill="#E5E7EB"/>
+  <circle cx="150" cy="60" r="2" fill="#E5E7EB"/>
+  <circle cx="40" cy="150" r="2" fill="#E5E7EB"/>
+  <circle cx="160" cy="140" r="2" fill="#E5E7EB"/>
+  
+  <!-- 连接线 -->
+  <path d="M70,80 Q85,90 100,85" stroke="#E5E7EB" stroke-width="2" fill="none" stroke-dasharray="4,2"/>
+  <path d="M130,120 Q115,110 100,115" stroke="#E5E7EB" stroke-width="2" fill="none" stroke-dasharray="4,2"/>
+</svg>

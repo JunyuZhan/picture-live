@@ -178,7 +178,7 @@ export default function HomePage() {
                       {user.role === 'photographer' ? '仪表板' : '加入会话'}
                     </Button>
                   </Link>
-                  <span className="text-sm text-gray-600">欢迎，{user.displayName}</span>
+                  <span className="text-sm text-gray-600">欢迎，{user.name}</span>
                 </>
               ) : (
                 <>

@@ -20,6 +20,7 @@ interface UploadFile {
 
 interface UploadAreaProps {
   onUpload: (files: File[]) => Promise<void>
+  sessionId?: string
   maxFiles?: number
   maxSize?: number // bytes
   acceptedTypes?: string[]
@@ -29,6 +30,7 @@ interface UploadAreaProps {
 
 export function UploadArea({
   onUpload,
+  sessionId,
   maxFiles = 20,
   maxSize = 10 * 1024 * 1024, // 10MB
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'],
@@ -135,6 +137,16 @@ export function UploadArea({
           : file
       ))
 
+      // 真实文件上传
+      const formData = new FormData()
+      pendingFiles.forEach(uploadFile => {
+        formData.append('photos', uploadFile.file)
+      })
+      
+      if (sessionId) {
+        formData.append('sessionId', sessionId)
+      }
+      
       // 模拟上传进度
       const progressInterval = setInterval(() => {
         setUploadFiles(prev => prev.map(file => 
@@ -144,8 +156,31 @@ export function UploadArea({
         ))
       }, 500)
 
-      // 执行实际上传
-      await onUpload(pendingFiles.map(f => f.file))
+      // 执行实际上传到API
+      try {
+        const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}/photos`, {
+          method: 'POST',
+          body: formData,
+        })
+        
+        if (!response.ok) {
+          throw new Error('Upload failed')
+        }
+        
+        const result = await response.json()
+        
+        // 如果有onUpload回调，也调用它
+        if (onUpload) {
+          await onUpload(pendingFiles.map(f => f.file))
+        }
+      } catch (uploadError) {
+        // 如果API上传失败，尝试使用回调函数
+        if (onUpload) {
+          await onUpload(pendingFiles.map(f => f.file))
+        } else {
+          throw uploadError
+        }
+      }
 
       // 清除进度更新
       clearInterval(progressInterval)

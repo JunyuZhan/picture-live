@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/providers/auth-provider'
-import { RegisterRequest } from '@/types/auth'
+import { RegisterRequest } from '@/types/api'
 
 interface RegisterFormData {
   username: string
@@ -54,11 +54,10 @@ export default function RegisterPage() {
     try {
       setIsLoading(true)
       const registerData: RegisterRequest = {
-        username: data.username,
+        name: data.displayName || data.username,
         email: data.email,
         password: data.password,
-        role: data.role,
-        displayName: data.displayName || data.username,
+        role: data.role === 'viewer' ? 'client' : data.role,
       }
       await registerUser(registerData)
     } catch (error: any) {

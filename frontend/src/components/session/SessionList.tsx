@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Search, Filter, Plus, Grid, List } from 'lucide-react'
-import type { Session } from '@/types/session'
+import type { Session } from '@/types/api'
 
 interface SessionListProps {
   sessions: Session[]
@@ -23,7 +23,7 @@ interface SessionListProps {
 }
 
 type ViewMode = 'grid' | 'list'
-type FilterStatus = 'all' | 'active' | 'paused' | 'ended' | 'draft'
+type FilterStatus = 'all' | 'live' | 'paused' | 'ended' | 'draft'
 type SortBy = 'created' | 'updated' | 'name' | 'photos'
 
 export function SessionList({
@@ -62,7 +62,7 @@ export function SessionList({
       case 'name':
         return a.title.localeCompare(b.title)
       case 'photos':
-        return (b.photoCount || 0) - (a.photoCount || 0)
+        return (b.stats.totalPhotos || 0) - (a.stats.totalPhotos || 0)
       case 'updated':
         return new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime()
       case 'created':
@@ -79,7 +79,7 @@ export function SessionList({
   const getStatusText = (status: FilterStatus) => {
     switch (status) {
       case 'all': return '全部'
-      case 'active': return '进行中'
+      case 'live': return '进行中'
       case 'paused': return '已暂停'
       case 'ended': return '已结束'
       case 'draft': return '草稿'
@@ -144,7 +144,7 @@ export function SessionList({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              {(['all', 'active', 'paused', 'ended', 'draft'] as FilterStatus[]).map(status => (
+              {(['all', 'live', 'paused', 'ended', 'draft'] as FilterStatus[]).map(status => (
                 <DropdownMenuItem
                   key={status}
                   onClick={() => setFilterStatus(status)}

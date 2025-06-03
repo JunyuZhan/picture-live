@@ -4,8 +4,9 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { sessionApi } from '@/lib/api/session'
+import { photoApi } from '@/lib/api/photo'
 import { useAuth } from './auth-provider'
-import type { Session, Photo, SessionSettings, CreateSessionRequest } from '@/types/session'
+import type { Session, Photo, CreateSessionRequest, SessionSettings } from '@/types/api'
 
 interface SessionContextType {
   currentSession: Session | null
@@ -145,12 +146,12 @@ export function SessionProvider({ children }: SessionProviderProps) {
         break
         
       case 'photo_liked':
-        updatePhoto(data.photoId, { likes: data.likes, isLiked: data.isLiked })
+        updatePhoto(data.photoId, { likes: data.likes })
         break
         
       case 'photo_deleted':
         removePhoto(data.photoId)
-        toast.info('照片已删除')
+        toast.success('照片已删除')
         break
         
       case 'viewer_count_updated':
@@ -162,7 +163,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         break
         
       case 'session_ended':
-        toast.info('会话已结束')
+        toast.success('会话已结束')
         leaveSession()
         break
         
@@ -174,7 +175,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
         
       case 'user_left':
         if (data.user) {
-          toast.info(`${data.user.displayName || data.user.username} 离开了会话`)
+          toast.success(`${data.user.displayName || data.user.username} 离开了会话`)
         }
         break
         
@@ -235,16 +236,16 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const joinSession = async (accessCode: string, displayName?: string) => {
     try {
       setIsLoading(true)
-      const session = await sessionApi.joinSession(accessCode, displayName)
+      const response = await sessionApi.joinSession({ sessionId: '', accessCode })
       
-      setCurrentSession(session)
+      setCurrentSession(response.session)
       
       // 获取会话照片
-      const sessionPhotos = await sessionApi.getSessionPhotos(session.id)
-      setPhotos(sessionPhotos)
+      const sessionPhotos = await photoApi.getSessionPhotos(response.session.id)
+      setPhotos(sessionPhotos.photos)
       
-      toast.success(`已加入会话: ${session.title}`)
-      router.push(`/session/${session.id}`)
+      toast.success(`已加入会话: ${response.session.title}`)
+      router.push(`/session/${response.session.id}`)
     } catch (error: any) {
       const message = error.response?.data?.message || '加入会话失败'
       toast.error(message)
@@ -264,7 +265,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   const updateSession = async (sessionId: string, data: Partial<SessionSettings>) => {
     try {
-      const updatedSession = await sessionApi.updateSession(sessionId, data)
+      const updatedSession = await sessionApi.updateSession(sessionId, { settings: data as SessionSettings })
       setCurrentSession(updatedSession)
       toast.success('会话设置已更新')
     } catch (error: any) {
@@ -312,7 +313,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
       await sessionApi.resumeSession(sessionId)
       
       if (currentSession?.id === sessionId) {
-        setCurrentSession(prev => prev ? { ...prev, status: 'active' } : null)
+        setCurrentSession(prev => prev ? { ...prev, status: 'live' } : null)
       }
       
       toast.success('会话已恢复')
@@ -342,7 +343,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   // Photo management functions
   const uploadPhotos = async (sessionId: string, files: File[]) => {
     try {
-      const uploadPromises = files.map(file => sessionApi.uploadPhoto(sessionId, file))
+      const uploadPromises = files.map(file => photoApi.uploadPhoto(sessionId, file))
       const uploadedPhotos = await Promise.all(uploadPromises)
       
       // WebSocket会处理实时更新，这里不需要手动更新状态
@@ -356,7 +357,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   const deletePhoto = async (photoId: string) => {
     try {
-      await sessionApi.deletePhoto(photoId)
+      await photoApi.deletePhoto(photoId)
       // WebSocket会处理实时更新
     } catch (error: any) {
       const message = error.response?.data?.message || '删除照片失败'
@@ -367,7 +368,10 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   const togglePhotoFeatured = async (photoId: string) => {
     try {
-      const updatedPhoto = await sessionApi.togglePhotoFeatured(photoId)
+      const currentPhoto = photos.find(p => p.id === photoId)
+      if (!currentPhoto) return
+      
+      const updatedPhoto = await photoApi.toggleFeatured(photoId, !currentPhoto.isFeatured)
       
       updatePhoto(photoId, { isFeatured: updatedPhoto.isFeatured })
       
@@ -381,7 +385,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   const likePhoto = async (photoId: string) => {
     try {
-      await sessionApi.likePhoto(photoId)
+      await photoApi.toggleLike(photoId)
       // WebSocket会处理实时更新
     } catch (error: any) {
       const message = error.response?.data?.message || '点赞失败'
@@ -392,17 +396,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
   
   const downloadPhoto = async (photoId: string) => {
     try {
-      const blob = await sessionApi.downloadPhoto(photoId)
-      
-      // 创建下载链接
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `photo-${photoId}.jpg`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      await photoApi.downloadPhoto(photoId)
       
       toast.success('照片下载成功')
     } catch (error: any) {
@@ -417,8 +411,8 @@ export function SessionProvider({ children }: SessionProviderProps) {
     
     try {
       setIsLoading(true)
-      const sessionPhotos = await sessionApi.getSessionPhotos(currentSession.id)
-      setPhotos(sessionPhotos)
+      const sessionPhotos = await photoApi.getSessionPhotos(currentSession.id)
+      setPhotos(sessionPhotos.photos)
     } catch (error) {
       console.error('Failed to refresh photos:', error)
       toast.error('刷新照片失败')

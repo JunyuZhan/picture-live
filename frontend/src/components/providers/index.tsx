@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5分钟
-      cacheTime: 10 * 60 * 1000, // 10分钟
+      gcTime: 10 * 60 * 1000, // 10分钟
       retry: (failureCount, error: any) => {
         // 对于认证错误不重试
         if (error?.response?.status === 401) {

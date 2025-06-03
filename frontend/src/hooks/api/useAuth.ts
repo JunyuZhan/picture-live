@@ -157,7 +157,13 @@ export function useRefreshToken() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => authApi.refreshToken(),
+    mutationFn: () => {
+      const refreshToken = tokenUtils.getRefreshToken()
+      if (!refreshToken) {
+        throw new Error('No refresh token available')
+      }
+      return authApi.refreshToken(refreshToken)
+    },
     onSuccess: (response) => {
       // 更新token
       tokenUtils.setAccessToken(response.accessToken)
@@ -167,11 +173,6 @@ export function useRefreshToken() {
       
       // 更新WebSocket认证
       wsClient.updateAuth(response.accessToken)
-      
-      // 如果返回了用户信息，更新缓存
-      if (response.user) {
-        queryClient.setQueryData(['auth', 'currentUser'], response.user)
-      }
     },
     onError: () => {
       // token刷新失败，清除所有数据并跳转到登录页
@@ -214,7 +215,11 @@ export function useUpdateProfile() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>
-      authApi.changePassword(data.currentPassword, data.newPassword),
+      authApi.changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.newPassword
+      }),
     onSuccess: () => {
       toast.success('密码修改成功', {
         description: '请使用新密码重新登录',
@@ -234,7 +239,7 @@ export function useChangePassword() {
  */
 export function useForgotPassword() {
   return useMutation({
-    mutationFn: (email: string) => authApi.forgotPassword(email),
+    mutationFn: (email: string) => authApi.requestPasswordReset(email),
     onSuccess: () => {
       toast.success('重置邮件已发送', {
         description: '请检查您的邮箱并按照说明重置密码',
@@ -257,7 +262,11 @@ export function useResetPassword() {
 
   return useMutation({
     mutationFn: (data: { token: string; password: string }) =>
-      authApi.resetPassword(data.token, data.password),
+      authApi.resetPassword({
+        token: data.token,
+        password: data.password,
+        confirmPassword: data.password
+      }),
     onSuccess: () => {
       toast.success('密码重置成功', {
         description: '请使用新密码登录',
@@ -314,14 +323,15 @@ export function useResendVerificationEmail() {
 /**
  * 检查用户名是否可用
  */
-export function useCheckUsernameAvailability() {
-  return useMutation({
-    mutationFn: (username: string) => authApi.checkUsernameExists(username),
-    onError: (error: any) => {
-      console.error('Check username availability error:', error)
-    },
-  })
-}
+// Note: checkUsernameExists method is not implemented in AuthApi
+// export function useCheckUsernameAvailability() {
+//   return useMutation({
+//     mutationFn: (username: string) => authApi.checkUsernameExists(username),
+//     onError: (error: any) => {
+//       console.error('Check username availability error:', error)
+//     },
+//   })
+// }
 
 /**
  * 检查邮箱是否可用
@@ -343,9 +353,15 @@ export function useUploadAvatar() {
 
   return useMutation({
     mutationFn: (file: File) => authApi.uploadAvatar(file),
-    onSuccess: (user: User) => {
-      // 更新缓存中的用户信息
-      queryClient.setQueryData(['auth', 'currentUser'], user)
+    onSuccess: (response: { avatarUrl: string }) => {
+      // 获取当前用户信息并更新头像URL
+      const currentUser = queryClient.getQueryData<User>(['auth', 'currentUser'])
+      if (currentUser) {
+        queryClient.setQueryData(['auth', 'currentUser'], {
+          ...currentUser,
+          avatarUrl: response.avatarUrl
+        })
+      }
       
       toast.success('头像上传成功')
     },
@@ -366,9 +382,15 @@ export function useDeleteAvatar() {
 
   return useMutation({
     mutationFn: () => authApi.deleteAvatar(),
-    onSuccess: (user: User) => {
-      // 更新缓存中的用户信息
-      queryClient.setQueryData(['auth', 'currentUser'], user)
+    onSuccess: () => {
+      // 获取当前用户信息并移除头像URL
+      const currentUser = queryClient.getQueryData<User>(['auth', 'currentUser'])
+      if (currentUser) {
+        queryClient.setQueryData(['auth', 'currentUser'], {
+          ...currentUser,
+          avatarUrl: null
+        })
+      }
       
       toast.success('头像删除成功')
     },

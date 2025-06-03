@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       setIsLoading(true)
-      await authApi.forgotPassword(data.email)
+      await authApi.requestPasswordReset(data.email)
       setSentEmail(data.email)
       setIsEmailSent(true)
       toast.success('重置密码邮件已发送')
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
   const handleResendEmail = async () => {
     try {
       setIsLoading(true)
-      await authApi.forgotPassword(sentEmail)
+      await authApi.requestPasswordReset(sentEmail)
       toast.success('重置密码邮件已重新发送')
     } catch (error: any) {
       console.error('Resend email failed:', error)

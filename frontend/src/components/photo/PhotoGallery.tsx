@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSession } from '@/components/providers/session-provider'
+import { useAuth } from '@/components/providers/auth-provider'
 import { toast } from '@/hooks/use-toast'
 
 interface Photo {
@@ -89,6 +90,11 @@ export function PhotoGallery({
     deletePhoto, 
     togglePhotoFeatured 
   } = useSession()
+  
+  const { user } = useAuth()
+  
+  // 判断当前用户是否为会话所有者
+  const isOwner = user && currentSession && user.id === currentSession.photographer.id
 
   // 过滤和排序照片
   const filteredAndSortedPhotos = React.useMemo(() => {
@@ -476,7 +482,7 @@ export function PhotoGallery({
                             <Share2 className="w-4 h-4 mr-2" />
                             分享
                           </DropdownMenuItem>
-                          {currentSession?.isOwner && (
+                          {isOwner && (
                             <>
                               <DropdownMenuItem onClick={(e) => handleToggleFeatured(photo.id, e)}>
                                 {photo.isFeatured ? (
@@ -641,7 +647,7 @@ export function PhotoGallery({
                           <Share2 className="w-4 h-4 mr-2" />
                           分享
                         </DropdownMenuItem>
-                        {currentSession?.isOwner && (
+                        {isOwner && (
                           <>
                             <DropdownMenuItem onClick={(e) => handleToggleFeatured(photo.id, e)}>
                               {photo.isFeatured ? (
@@ -782,7 +788,7 @@ export function PhotoGallery({
                         <Share2 className="w-4 h-4" />
                       </Button>
                       
-                      {currentSession?.isOwner && (
+                      {isOwner && (
                         <>
                           <Button
                             variant="ghost"

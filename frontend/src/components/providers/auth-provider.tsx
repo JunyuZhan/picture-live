@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { authApi } from '@/lib/api/auth'
 import { tokenUtils } from '@/lib/utils/token'
-import type { User, AuthState, LoginRequest, RegisterRequest } from '@/types/auth'
+import type { AuthState, LoginRequest } from '@/types/auth'
+import type { User, RegisterRequest } from '@/types/api'
 
 interface AuthContextType {
   user: User | null
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // 获取用户信息
       try {
-        const userData = await authApi.getProfile()
+        const userData = await authApi.getCurrentUser()
         setUser(userData)
       } catch (error) {
         console.error('Failed to get user profile:', error)
@@ -122,16 +123,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw new Error('Refresh token is invalid or expired')
     }
 
-    const response = await authApi.refreshToken({ refreshToken })
+    const response = await authApi.refreshToken(refreshToken)
     
     tokenUtils.setAccessToken(response.accessToken)
     if (response.refreshToken) {
       tokenUtils.setRefreshToken(response.refreshToken)
     }
 
-    // 更新用户信息
-    if (response.user) {
-      setUser(response.user)
+    // 刷新token后需要重新获取用户信息
+    try {
+      const userData = await authApi.getCurrentUser()
+      setUser(userData)
+    } catch (error) {
+      console.error('Failed to get user after token refresh:', error)
     }
   }
 

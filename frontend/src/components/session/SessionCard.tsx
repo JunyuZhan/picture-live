@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Users, Camera, Share2, Settings, Trash2, Play, Pause, Square } from 'lucide-react'
-import type { Session } from '@/types/session'
+import type { Session } from '@/types/api'
 
 interface SessionCardProps {
   session: Session
@@ -34,7 +34,7 @@ export function SessionCard({
 }: SessionCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'live':
         return 'bg-green-100 text-green-800 border-green-200'
       case 'paused':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200'
@@ -49,7 +49,7 @@ export function SessionCard({
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'live':
         return '进行中'
       case 'paused':
         return '已暂停'
@@ -64,7 +64,7 @@ export function SessionCard({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'live':
         return <Play className="w-3 h-3" />
       case 'paused':
         return <Pause className="w-3 h-3" />
@@ -157,13 +157,13 @@ export function SessionCard({
                   设置
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {session.status === 'draft' && (
+                {session.status === 'scheduled' && (
                   <DropdownMenuItem onClick={(e) => handleAction('start', e)}>
                     <Play className="w-4 h-4 mr-2" />
                     开始会话
                   </DropdownMenuItem>
                 )}
-                {session.status === 'active' && (
+                {session.status === 'live' && (
                   <DropdownMenuItem onClick={(e) => handleAction('pause', e)}>
                     <Pause className="w-4 h-4 mr-2" />
                     暂停会话
@@ -175,7 +175,7 @@ export function SessionCard({
                     恢复会话
                   </DropdownMenuItem>
                 )}
-                {(session.status === 'active' || session.status === 'paused') && (
+                {(session.status === 'live' || session.status === 'paused') && (
                   <DropdownMenuItem onClick={(e) => handleAction('end', e)}>
                     <Square className="w-4 h-4 mr-2" />
                     结束会话
@@ -200,11 +200,11 @@ export function SessionCard({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <Camera className="w-4 h-4" />
-              <span>{session.photoCount || 0} 张照片</span>
+              <span>{session.stats.totalPhotos || 0} 张照片</span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              <span>{session.viewCount || 0} 次查看</span>
+              <span>{session.currentViewers || 0} 次查看</span>
             </div>
           </div>
           

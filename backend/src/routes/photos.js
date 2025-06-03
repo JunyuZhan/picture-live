@@ -12,6 +12,7 @@ const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/database');
 const redis = require('../config/redis');
+const storageManager = require('../config/storage');
 const logger = require('../utils/logger');
 const { asyncHandler, AppError, ValidationError } = require('../middleware/errorHandler');
 const { 
@@ -180,7 +181,14 @@ async function generateMultiResolution(inputPath, watermarkOptions = null) {
 }
 
 /**
- * 保存图片到本地存储
+ * 保存图片到存储
+ */
+async function saveToStorage(buffer, filename, subfolder = '', options = {}) {
+    return await storageManager.uploadFile(buffer, filename, subfolder, options);
+}
+
+/**
+ * 保存图片到本地存储（向后兼容）
  */
 async function saveToLocalStorage(buffer, filename, subfolder = '') {
     const uploadDir = path.join(process.env.UPLOAD_PATH || './uploads', subfolder);
@@ -285,14 +293,14 @@ router.post('/:sessionId/photos',
                 // 生成多分辨率版本
                 const versions = await generateMultiResolution(file.path, watermarkOptions);
                 
-                // 保存到本地存储
+                // 保存到存储
                 const timestamp = Date.now();
                 const baseFilename = `${sessionId}_${timestamp}_${uuidv4()}`;
                 
                 const urls = {};
                 for (const [size, buffer] of Object.entries(versions)) {
                     const filename = `${baseFilename}_${size}.${size === 'webp' ? 'webp' : 'jpg'}`;
-                    urls[size] = await saveToLocalStorage(buffer, filename, size);
+                    urls[size] = await saveToStorage(buffer, filename, size);
                 }
                 
                 // 确定照片状态
