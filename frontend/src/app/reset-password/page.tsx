@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -16,7 +16,7 @@ interface ResetPasswordFormData {
   confirmPassword: string
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null)
@@ -336,5 +336,13 @@ export default function ResetPasswordPage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }

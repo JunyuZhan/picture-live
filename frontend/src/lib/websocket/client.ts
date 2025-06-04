@@ -72,7 +72,7 @@ export class WebSocketClient {
   private maxReconnectAttempts = 5
   private reconnectDelay = 1000
   private isConnecting = false
-  private eventListeners = new Map<string, Set<Function>>()
+  private eventListeners = new Map<string, Set<(...args: any[]) => void>>()
   private currentSessionId: string | null = null
 
   constructor(private baseUrl: string = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001') {}
@@ -210,7 +210,7 @@ export class WebSocketClient {
     // 重新注册所有事件监听器
     this.eventListeners.forEach((listeners, event) => {
       listeners.forEach((listener) => {
-        this.socket?.on(event, listener)
+        this.socket?.on(event, listener as any)
       })
     })
   }
@@ -297,7 +297,7 @@ export class WebSocketClient {
     this.eventListeners.get(event)!.add(listener)
     
     if (this.socket?.connected) {
-      this.socket.on(event, listener)
+      this.socket.on(event, listener as any)
     }
   }
 
@@ -307,7 +307,7 @@ export class WebSocketClient {
   off<K extends keyof WebSocketEvents>(event: K, listener?: WebSocketEvents[K]): void {
     if (listener) {
       this.eventListeners.get(event)?.delete(listener)
-      this.socket?.off(event, listener)
+      this.socket?.off(event, listener as any)
     } else {
       this.eventListeners.delete(event)
       this.socket?.off(event)

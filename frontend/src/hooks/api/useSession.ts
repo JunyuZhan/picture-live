@@ -399,13 +399,12 @@ export function useDuplicateSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ sessionId, options }: {
+    mutationFn: ({
+      sessionId,
+      options,
+    }: {
       sessionId: string
-      options?: {
-        copyPhotos?: boolean
-        copySettings?: boolean
-        newTitle?: string
-      }
+      options?: Partial<CreateSessionRequest>
     }) => sessionApi.duplicateSession(sessionId, options),
     onSuccess: (session: Session) => {
       // 更新会话列表缓存
@@ -431,13 +430,13 @@ export function useExportSession() {
   return useMutation({
     mutationFn: ({ sessionId, format, options }: {
       sessionId: string
-      format: 'json' | 'csv' | 'zip'
+      format: 'json' | 'csv' | 'pdf'
       options?: {
         includePhotos?: boolean
         includeMetadata?: boolean
         quality?: 'original' | 'high' | 'medium'
       }
-    }) => sessionApi.exportSession(sessionId, format, options),
+    }) => sessionApi.exportSession(sessionId, format),
     onSuccess: () => {
       toast.success('导出成功', {
         description: '文件下载已开始',

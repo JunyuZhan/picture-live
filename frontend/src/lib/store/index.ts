@@ -134,7 +134,7 @@ const initialState: AppState = {
 /**
  * 创建应用状态store
  */
-export const useAppStore = create<AppState & AppActions>()()
+export const useAppStore = create<AppState & AppActions>()(
   devtools(
     persist(
       immer((set, get) => ({
@@ -296,6 +296,7 @@ export const useAppStore = create<AppState & AppActions>()()
       name: 'picture-live-store',
     }
   )
+)
 
 /**
  * 选择器hooks
