@@ -12,7 +12,7 @@ const db = require('../config/database');
 const redis = require('../config/redis');
 const logger = require('../utils/logger');
 const { asyncHandler, AppError, ValidationError } = require('../middleware/errorHandler');
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -58,9 +58,9 @@ const registerValidation = [
 ];
 
 const loginValidation = [
-    body('username')
+    body('email')
         .notEmpty()
-        .withMessage('用户名不能为空'),
+        .withMessage('邮箱不能为空'),
     body('password')
         .notEmpty()
         .withMessage('密码不能为空')
@@ -182,14 +182,14 @@ router.post('/login', authLimiter, loginValidation, asyncHandler(async (req, res
         throw new ValidationError('输入验证失败', errors.array());
     }
     
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     
     // 查找用户（支持用户名或邮箱登录）
     const result = await db.query(
         `SELECT id, username, email, password_hash, display_name, role, is_active, email_verified
          FROM users 
          WHERE (username = $1 OR email = $1) AND is_active = true`,
-        [username]
+        [email]
     );
     
     if (result.rows.length === 0) {
@@ -309,7 +309,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
  * 用户登出
  * POST /api/auth/logout
  */
-router.post('/logout', authMiddleware, asyncHandler(async (req, res) => {
+router.post('/logout', authenticateToken, asyncHandler(async (req, res) => {
     const userId = req.user.userId;
     
     // 从Redis中删除刷新令牌
@@ -342,7 +342,7 @@ router.post('/logout', authMiddleware, asyncHandler(async (req, res) => {
  * 获取当前用户信息
  * GET /api/auth/me
  */
-router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
+router.get('/me', authenticateToken, asyncHandler(async (req, res) => {
     const result = await db.query(
         `SELECT id, username, email, display_name, avatar_url, role, is_active, 
                 email_verified, last_login_at, created_at, updated_at
@@ -380,7 +380,7 @@ router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
  * 修改密码
  * PUT /api/auth/password
  */
-router.put('/password', authMiddleware, changePasswordValidation, asyncHandler(async (req, res) => {
+router.put('/password', authenticateToken, changePasswordValidation, asyncHandler(async (req, res) => {
     // 验证输入
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -438,7 +438,7 @@ router.put('/password', authMiddleware, changePasswordValidation, asyncHandler(a
  * 更新用户资料
  * PUT /api/auth/profile
  */
-router.put('/profile', authMiddleware, [
+router.put('/profile', authenticateToken, [
     body('displayName')
         .optional()
         .isLength({ min: 1, max: 100 })

@@ -203,7 +203,7 @@ class DatabaseMigrator {
             
             if (pending.length === 0) {
                 logger.info('没有待执行的迁移');
-                return { executed: 0, migrations: [] };
+                return { executed: [] };
             }
             
             logger.info(`发现 ${pending.length} 个待执行的迁移`);
@@ -212,12 +212,12 @@ class DatabaseMigrator {
             
             for (const migration of pending) {
                 await this.executeMigration(migration, 'up');
-                executed.push(migration.name);
+                executed.push({ name: migration.name });
             }
             
             logger.info(`成功执行 ${executed.length} 个迁移`);
             
-            return { executed: executed.length, migrations: executed };
+            return { executed };
             
         } catch (error) {
             logger.error('迁移执行失败:', error);
@@ -262,8 +262,8 @@ class DatabaseMigrator {
             
             return {
                 total: available.length,
-                executed: executed.length,
-                pending: pending.length,
+                executed: executed,
+                pending: pending,
                 failed: executed.filter(m => m.status === 'failed').length,
                 migrations: {
                     available: available.map(m => m.name),
@@ -287,19 +287,25 @@ class DatabaseMigrator {
                 .filter(file => file.endsWith('.sql'))
                 .sort();
             
+            const executed = [];
+            
             if (seedName) {
                 const seedFile = files.find(file => file.includes(seedName));
                 if (!seedFile) {
                     throw new Error(`种子文件不存在: ${seedName}`);
                 }
                 await this.executeSeedFile(seedFile);
+                executed.push({ name: seedFile });
             } else {
                 for (const file of files) {
                     await this.executeSeedFile(file);
+                    executed.push({ name: file });
                 }
             }
             
             logger.info('种子数据执行完成');
+            
+            return { executed };
             
         } catch (error) {
             logger.error('种子数据执行失败:', error);
@@ -321,17 +327,8 @@ class DatabaseMigrator {
             
             await client.query('BEGIN');
             
-            // 分割并执行SQL语句
-            const statements = seedSQL
-                .split(';')
-                .map(stmt => stmt.trim())
-                .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-            
-            for (const statement of statements) {
-                if (statement.trim()) {
-                    await client.query(statement);
-                }
-            }
+            // 直接执行整个SQL脚本，让PostgreSQL处理语句分割
+            await client.query(seedSQL);
             
             await client.query('COMMIT');
             
@@ -347,25 +344,70 @@ class DatabaseMigrator {
     }
 
     /**
+     * 获取种子数据状态
+     */
+    async getSeedStatus() {
+        try {
+            const files = fs.readdirSync(this.seedsPath)
+                .filter(file => file.endsWith('.sql'))
+                .sort();
+            
+            return {
+                pending: files.map(file => ({ name: file })),
+                executed: [] // 简化实现，种子数据通常可以重复执行
+            };
+        } catch (error) {
+            logger.error('获取种子状态失败:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 删除所有表
+     */
+    async dropAllTables() {
+        const client = await this.pool.connect();
+        
+        try {
+            logger.warn('开始删除所有表...');
+            
+            await client.query('BEGIN');
+            
+            // 获取所有表名
+            const result = await client.query(`
+                SELECT tablename 
+                FROM pg_tables 
+                WHERE schemaname = 'public'
+            `);
+            
+            // 删除所有表
+            for (const row of result.rows) {
+                await client.query(`DROP TABLE IF EXISTS "${row.tablename}" CASCADE`);
+                logger.info(`删除表: ${row.tablename}`);
+            }
+            
+            await client.query('COMMIT');
+            
+            logger.warn('所有表删除完成');
+            
+        } catch (error) {
+            await client.query('ROLLBACK');
+            logger.error('删除表失败:', error);
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    /**
      * 重置数据库（危险操作）
      */
     async reset() {
         try {
             logger.warn('开始重置数据库...');
             
-            // 获取所有已执行的迁移并按逆序回滚
-            const executed = await this.getExecutedMigrations();
-            const available = await this.getAvailableMigrations();
-            
-            for (const executedMigration of executed.reverse()) {
-                const migration = available.find(m => m.name === executedMigration.migration_name);
-                if (migration && migration.down) {
-                    await this.executeMigration(migration, 'down');
-                }
-            }
-            
-            // 清空迁移记录表
-            await this.pool.query('DELETE FROM schema_migrations');
+            // 直接删除所有表
+            await this.dropAllTables();
             
             logger.warn('数据库重置完成');
             

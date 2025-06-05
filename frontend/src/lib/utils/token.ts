@@ -49,8 +49,10 @@ class TokenUtils {
   }
 
   // Token validation
-  isTokenExpired(token: string, bufferSeconds: number = 0): boolean {
+  isTokenExpired(token: string | null, bufferSeconds: number = 0): boolean {
     try {
+      if (!token) return true
+      
       const payload = this.parseJWT(token)
       if (!payload || !payload.exp) return true
       
@@ -63,9 +65,18 @@ class TokenUtils {
   }
 
   // Parse JWT token
-  parseJWT(token: string): JWTPayload | null {
+  parseJWT(token: string | null): JWTPayload | null {
     try {
-      const base64Url = token.split('.')[1]
+      if (!token || typeof token !== 'string') {
+        return null
+      }
+      
+      const parts = token.split('.')
+      if (parts.length !== 3) {
+        return null
+      }
+      
+      const base64Url = parts[1]
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
       const jsonPayload = decodeURIComponent(
         atob(base64)
@@ -127,6 +138,36 @@ class TokenUtils {
     const token = this.getAccessToken()
     return token ? `Bearer ${token}` : null
   }
+
+  // Refresh access token using refresh token
+  async refreshToken(): Promise<string> {
+    const refreshToken = this.getRefreshToken()
+    if (!refreshToken) {
+      throw new Error('No refresh token available')
+    }
+
+    if (this.isTokenExpired(refreshToken)) {
+      throw new Error('Refresh token is expired')
+    }
+
+    try {
+      // Import auth API dynamically to avoid circular dependency
+      const { authApi } = await import('../api/auth')
+      const response = await authApi.refreshToken(refreshToken)
+      
+      // Update stored tokens
+      this.setAccessToken(response.accessToken)
+      if (response.refreshToken) {
+        this.setRefreshToken(response.refreshToken)
+      }
+      
+      return response.accessToken
+    } catch (error) {
+      // Clear invalid tokens
+      this.removeTokens()
+      throw error
+    }
+  }
 }
 
 // Export singleton instance
@@ -160,20 +201,20 @@ export function hasToken(): boolean {
 /**
  * 解析JWT令牌
  */
-export function parseJWT(token: string): any {
+export function parseJWT(token: string | null): any {
   return tokenUtils.parseJWT(token)
 }
 
 /**
  * 检查令牌是否过期
  */
-export function isTokenExpired(token: string): boolean {
+export function isTokenExpired(token: string | null): boolean {
   return tokenUtils.isTokenExpired(token)
 }
 
 /**
  * 检查令牌是否即将过期（5分钟内）
  */
-export function isTokenExpiringSoon(token: string): boolean {
+export function isTokenExpiringSoon(token: string | null): boolean {
   return tokenUtils.isTokenExpired(token, 5 * 60)
 }

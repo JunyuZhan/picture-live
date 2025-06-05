@@ -1,0 +1,99 @@
+# Picture Live - 开发环境 Docker Compose 配置
+# 用于本地开发的轻量级配置
+
+version: '3.8'
+
+services:
+  # PostgreSQL数据库（开发环境）
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: picture-live-postgres-dev
+    environment:
+      POSTGRES_DB: picture_live_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ../backend/database/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - picture-live-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis缓存（开发环境）
+  redis-dev:
+    image: redis:7-alpine
+    container_name: picture-live-redis-dev
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - picture-live-dev-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务（开发模式）
+  api-dev:
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend/Dockerfile.dev
+    container_name: picture-live-api-dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres-dev
+      DB_PORT: 5432
+      DB_NAME: picture_live_dev
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      REDIS_HOST: redis-dev
+      REDIS_PORT: 6379
+      JWT_SECRET: dev-jwt-secret-key
+      JWT_REFRESH_SECRET: dev-refresh-secret-key
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: 50MB
+      CORS_ORIGINS: http://localhost:3000
+      AUTO_MIGRATE: true
+      LOAD_SEED_DATA: true
+    ports:
+      - "3002:3001"
+    volumes:
+      - ../backend/src:/app/src:ro
+      - ../backend/package.json:/app/package.json:ro
+      - uploads_dev_data:/app/uploads
+      - logs_dev_data:/app/logs
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+    networks:
+      - picture-live-dev-network
+    restart: unless-stopped
+    command: npm run dev
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  uploads_dev_data:
+    driver: local
+  logs_dev_data:
+    driver: local
+
+networks:
+  picture-live-dev-network:
+    driver: bridge

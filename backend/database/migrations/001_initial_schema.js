@@ -22,17 +22,8 @@ exports.up = async function(db) {
             'utf8'
         );
         
-        // 分割SQL语句并逐个执行
-        const statements = createTablesSQL
-            .split(';')
-            .map(stmt => stmt.trim())
-            .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-        
-        for (const statement of statements) {
-            if (statement.trim()) {
-                await db.query(statement);
-            }
-        }
+        // 直接执行整个SQL脚本，让PostgreSQL处理语句分割
+        await db.query(createTablesSQL);
         
         console.log('✅ 数据库表结构创建完成');
         

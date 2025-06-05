@@ -7,9 +7,9 @@
 
 -- 插入测试用户
 INSERT INTO users (id, username, email, password_hash, display_name, avatar_url, role, is_active, email_verified) VALUES
-('550e8400-e29b-41d4-a716-446655440001', 'photographer1', 'photographer1@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj6hsxq/3Haa', '张摄影师', '/avatars/photographer1.jpg', 'photographer', true, true),
-('550e8400-e29b-41d4-a716-446655440002', 'photographer2', 'photographer2@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj6hsxq/3Haa', '李摄影师', '/avatars/photographer2.jpg', 'photographer', true, true),
-('550e8400-e29b-41d4-a716-446655440003', 'testuser', 'testuser@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj6hsxq/3Haa', '测试用户', '/avatars/testuser.jpg', 'photographer', true, false)
+('550e8400-e29b-41d4-a716-446655440001', 'photographer1', 'photographer1@example.com', '$2a$12$S6Ry0tDbx2n6BAw48Y6aEuUCbRnCCF2xmk.QR.smlYNh5s/uK5FE2', '张摄影师', '/avatars/photographer1.jpg', 'photographer', true, true),
+('550e8400-e29b-41d4-a716-446655440002', 'photographer2', 'photographer2@example.com', '$2a$12$S6Ry0tDbx2n6BAw48Y6aEuUCbRnCCF2xmk.QR.smlYNh5s/uK5FE2', '李摄影师', '/avatars/photographer2.jpg', 'photographer', true, true),
+('550e8400-e29b-41d4-a716-446655440003', 'testuser', 'testuser@example.com', '$2a$12$S6Ry0tDbx2n6BAw48Y6aEuUCbRnCCF2xmk.QR.smlYNh5s/uK5FE2', '测试用户', '/avatars/testuser.jpg', 'photographer', true, false)
 ON CONFLICT (id) DO NOTHING;
 
 -- 插入测试会话

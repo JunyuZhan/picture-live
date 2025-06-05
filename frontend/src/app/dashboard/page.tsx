@@ -27,26 +27,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/components/providers/auth-provider'
-import { Session } from '@/types/session'
-import { SessionStatus } from '@/types/api'
+import { Session, SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
+import { sessionApi } from '@/lib/api/session'
 
 // 从API获取会话数据
 const fetchSessions = async (): Promise<Session[]> => {
   try {
-    const response = await fetch('http://localhost:3001/api/sessions', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch sessions')
-    }
-    
-    const data = await response.json()
-    return data.data.sessions || []
+    const response = await sessionApi.getMySessions()
+    return response.sessions || []
   } catch (error) {
     console.error('Error fetching sessions:', error)
     toast.error('获取会话列表失败')
@@ -57,10 +46,23 @@ const fetchSessions = async (): Promise<Session[]> => {
 export default function DashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { user } = useAuth()
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
+    // 等待认证状态加载完成
+    if (authLoading) {
+      return
+    }
+
+    // 如果未认证，延迟一下再跳转，避免状态同步问题
+    if (!isAuthenticated) {
+      const timer = setTimeout(() => {
+        router.push('/login')
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+
     // 加载会话数据
     const loadSessions = async () => {
       try {
@@ -76,7 +78,7 @@ export default function DashboardPage() {
     }
 
     loadSessions()
-  }, [])
+  }, [authLoading, isAuthenticated, router])
 
   const getStatusBadge = (status: SessionStatus) => {
     switch (status) {
@@ -302,8 +304,8 @@ export default function DashboardPage() {
                             {session.title}
                           </h3>
                           {getStatusBadge(session.status)}
-                          <Badge variant={session.settings.isPublic ? 'default' : 'secondary'}>
-                            {session.settings.isPublic ? '公开' : '私密'}
+                          <Badge variant={!session.isPrivate ? 'default' : 'secondary'}>
+                            {!session.isPrivate ? '公开' : '私密'}
                           </Badge>
                         </div>
                         <p className="text-gray-600 mb-4">{session.description}</p>
@@ -345,21 +347,21 @@ export default function DashboardPage() {
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <MessageCircle className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
-                              {session.stats.totalComments} 条评论
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
                             <Download className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.totalDownloads}  次下载
+                              {session.stats.totalDownloads} 次下载
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Users className="h-4 w-4 text-gray-400" />
                             <span className="text-sm text-gray-600">
-                              {session.stats.activeViewers} 在线
+                              {session.stats.peakViewers} 峰值观看
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Eye className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">
+                              {session.stats.totalViews} 次观看
                             </span>
                           </div>
                         </div>

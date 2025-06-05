@@ -45,12 +45,36 @@ app.get('/api/sessions', (req, res) => {
           id: '1',
           title: '测试会话',
           description: '这是一个测试会话',
-          status: 'active',
-          isPublic: true,
+          status: 'live',
+          type: 'event',
           accessCode: 'TEST2024',
-          totalPhotos: 0,
-          publishedPhotos: 0,
-          pendingPhotos: 0,
+          photographer: {
+            id: 'admin',
+            username: 'admin',
+            displayName: '管理员'
+          },
+          settings: {
+            isPublic: true,
+            allowDownload: true,
+            allowComments: true,
+            allowLikes: true,
+            watermark: {
+              enabled: false,
+              position: 'bottom-right',
+              opacity: 0.5
+            },
+            autoApprove: true,
+            tags: []
+          },
+          stats: {
+            totalPhotos: 0,
+            totalViews: 0,
+            totalLikes: 0,
+            totalComments: 0,
+            totalDownloads: 0,
+            activeViewers: 0,
+            peakViewers: 0
+          },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }

@@ -303,6 +303,86 @@ router.get('/', authenticateToken, listSessionsValidation, asyncHandler(async (r
 }));
 
 /**
+ * 获取当前用户的会话列表
+ * GET /api/sessions/my
+ */
+router.get('/my', authenticateToken, listSessionsValidation, asyncHandler(async (req, res) => {
+    // 验证输入
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        throw new ValidationError('输入验证失败', errors.array());
+    }
+    
+    const {
+        page = 1,
+        limit = 20,
+        status,
+        search
+    } = req.query;
+    
+    const userId = req.user.userId;
+    const offset = (page - 1) * limit;
+    
+    // 构建查询条件
+    let whereClause = 'WHERE s.user_id = $1';
+    let params = [userId];
+    let paramIndex = 2;
+    
+    if (status) {
+        whereClause += ` AND s.status = $${paramIndex++}`;
+        params.push(status);
+    }
+    
+    if (search) {
+        whereClause += ` AND (s.title ILIKE $${paramIndex++} OR s.description ILIKE $${paramIndex++})`;
+        params.push(`%${search}%`, `%${search}%`);
+    }
+    
+    // 查询会话列表
+    const sessionsResult = await db.query(
+        `SELECT s.*, 
+                COUNT(*) OVER() as total_count
+         FROM session_details s
+         ${whereClause}
+         ORDER BY s.created_at DESC
+         LIMIT $${paramIndex++} OFFSET $${paramIndex++}`,
+        [...params, limit, offset]
+    );
+    
+    const sessions = sessionsResult.rows;
+    const totalCount = sessions.length > 0 ? parseInt(sessions[0].total_count) : 0;
+    
+    res.json({
+        success: true,
+        data: {
+            sessions: sessions.map(session => ({
+                id: session.id,
+                title: session.title,
+                description: session.description,
+                isPublic: session.is_public,
+                status: session.status,
+                totalPhotos: session.total_photos,
+                publishedPhotos: session.published_photos,
+                pendingPhotos: session.pending_photos,
+                totalViews: session.total_views,
+                uniqueViewers: session.unique_viewers,
+                duration: session.duration,
+                startedAt: session.started_at,
+                endedAt: session.ended_at,
+                createdAt: session.created_at,
+                updatedAt: session.updated_at
+            })),
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: totalCount,
+                pages: Math.ceil(totalCount / limit)
+            }
+        }
+    });
+}));
+
+/**
  * 获取单个会话详情
  * GET /api/sessions/:id
  */

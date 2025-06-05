@@ -155,9 +155,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
       
+      // 设置用户状态
       setUser(response.user)
       
       toast.success('登录成功！')
+      
+      // 等待状态完全同步后再跳转
+      await new Promise(resolve => setTimeout(resolve, 200))
       
       // 根据用户角色跳转
       if (response.user.role === 'photographer') {
@@ -184,9 +188,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
       
+      // 设置用户状态
       setUser(response.user)
       
       toast.success('注册成功！')
+      
+      // 等待状态完全同步后再跳转
+      await new Promise(resolve => setTimeout(resolve, 200))
       
       // 根据用户角色跳转
       if (response.user.role === 'photographer') {
@@ -195,7 +203,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         router.push('/join')
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || '注册失败，请稍后重试'
+      const message = error.response?.data?.message || '注册失败，请重试'
       toast.error(message)
       throw error
     } finally {

@@ -9,7 +9,7 @@ require('dotenv').config()
 
 const logger = require('./utils/logger')
 const requestLogger = require('./middleware/requestLogger')
-const errorHandler = require('./middleware/errorHandler')
+const { errorHandler } = require('./middleware/errorHandler')
 const { connectDatabase } = require('./config/database')
 const { connectRedis } = require('./config/redis')
 const socketHandler = require('./socket/socketHandler')
@@ -80,29 +80,47 @@ const PORT = process.env.PORT || 3001
 
 // 启动服务器
 async function startServer() {
+  let dbConnected = false
+  let redisConnected = false
+
+  // 尝试连接数据库
   try {
-    // 连接数据库
     await connectDatabase()
     logger.info('Database connected successfully')
+    dbConnected = true
+  } catch (error) {
+    logger.warn('Failed to connect to database:', error.message)
+    logger.warn('Server will start without database connection')
+  }
 
-    // 连接Redis
+  // 尝试连接Redis
+  try {
     await connectRedis()
     logger.info('Redis connected successfully')
-
-    // 启动HTTP服务器
-    server.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`)
-      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`)
-    })
-
-    // 优雅关闭
-    process.on('SIGTERM', gracefulShutdown)
-    process.on('SIGINT', gracefulShutdown)
-
+    redisConnected = true
   } catch (error) {
-    logger.error('Failed to start server:', error)
-    process.exit(1)
+    logger.warn('Failed to connect to Redis:', error.message)
+    logger.warn('Server will start without Redis connection')
   }
+
+  // 启动HTTP服务器
+  server.listen(PORT, () => {
+    logger.info(`🚀 Picture Live API Server is running!`)
+    logger.info(`📍 Local: http://localhost:${PORT}`)
+    logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+    logger.info(`⏰ Started at: ${new Date().toLocaleString('zh-CN')}`)
+    
+    if (!dbConnected) {
+      logger.warn('⚠️  Database not connected - some features may not work')
+    }
+    if (!redisConnected) {
+      logger.warn('⚠️  Redis not connected - caching disabled')
+    }
+  })
+
+  // 优雅关闭
+  process.on('SIGTERM', gracefulShutdown)
+  process.on('SIGINT', gracefulShutdown)
 }
 
 // 优雅关闭函数

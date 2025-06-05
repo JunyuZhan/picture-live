@@ -18,15 +18,28 @@ const apiClient: AxiosInstance = axios.create({
 
 // 请求拦截器 - 添加认证token
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = tokenUtils.getAccessToken()
-    if (token && !tokenUtils.isTokenExpired(token)) {
-      config.headers.Authorization = `Bearer ${token}`
+  async (config) => {
+    let token = tokenUtils.getAccessToken()
+    
+    // 自动刷新过期token
+    if (token && tokenUtils.isTokenExpired(token)) {
+      try {
+        const newToken = await tokenUtils.refreshToken()
+        token = newToken
+      } catch (e) {
+        console.warn('Token refresh failed:', e)
+        window.location.href = '/login?expired=true'
+        return config
+      }
     }
-    
-    // 添加请求时间戳用于调试
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    } else {
+      console.warn('No valid access token available')
+    }
+
     config.metadata = { startTime: new Date() }
-    
     return config
   },
   (error) => {
@@ -38,20 +51,17 @@ apiClient.interceptors.request.use(
 // 响应拦截器 - 处理通用响应和错误
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 记录响应时间用于调试
     const endTime = new Date()
     const startTime = response.config.metadata?.startTime
     if (startTime) {
       const duration = endTime.getTime() - startTime.getTime()
       console.debug(`API ${response.config.method?.toUpperCase()} ${response.config.url} - ${duration}ms`)
     }
-    
     return response
   },
   async (error) => {
     const originalRequest = error.config
     
-    // 处理网络错误
     if (!error.response) {
       console.error('Network error:', error.message)
       toast.error('网络连接失败，请检查您的网络连接')
@@ -60,54 +70,28 @@ apiClient.interceptors.response.use(
     
     const { status, data } = error.response
     
-    // 处理401未授权 - Token过期或无效
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       
       try {
-        const refreshToken = tokenUtils.getRefreshToken()
-        if (refreshToken && !tokenUtils.isTokenExpired(refreshToken)) {
-          // 尝试刷新token
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          })
-          
-          const { accessToken, refreshToken: newRefreshToken } = response.data.data
-          
-          // 更新tokens
-          tokenUtils.setAccessToken(accessToken)
-          if (newRefreshToken) {
-            tokenUtils.setRefreshToken(newRefreshToken)
-          }
-          
-          // 重试原始请求
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`
-          return apiClient(originalRequest)
-        }
+        const newToken = await tokenUtils.refreshToken()
+        tokenUtils.setAccessToken(newToken)
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        return apiClient(originalRequest)
       } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError)
+        console.warn('令牌刷新失败，跳转登录页面')
+        tokenUtils.removeTokens()
+        window.location.href = '/login?session_expired=true'
       }
-      
-      // 刷新失败，清除tokens并跳转登录
-      tokenUtils.removeTokens()
-      
-      // 只在非登录页面显示提示
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-        toast.error('登录已过期，请重新登录')
-        window.location.href = '/login'
-      }
-      
       return Promise.reject(error)
     }
     
-    // 处理其他HTTP错误
     const apiError: ApiError = {
       code: data?.code || `HTTP_${status}`,
       message: data?.message || getDefaultErrorMessage(status),
       details: data?.details,
     }
     
-    // 显示用户友好的错误消息
     if (status >= 500) {
       toast.error('服务器错误，请稍后重试')
     } else if (status === 403) {
@@ -117,7 +101,6 @@ apiClient.interceptors.response.use(
     } else if (status === 429) {
       toast.error('请求过于频繁，请稍后重试')
     } else if (data?.message && status < 500) {
-      // 显示客户端错误的具体消息
       toast.error(data.message)
     }
     
