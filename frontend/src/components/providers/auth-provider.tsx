@@ -72,11 +72,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             await refreshTokens()
             return
           } catch (error) {
-            console.error('Token refresh failed:', error)
+            console.warn('初始化时刷新令牌失败:', error)
             clearAuthState()
             return
           }
         } else {
+          // Refresh token 不存在或已过期，清除认证状态
+          console.debug('Refresh token expired or missing, clearing auth state')
           clearAuthState()
           return
         }
@@ -87,8 +89,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = await authApi.getCurrentUser()
         setUser(userData)
       } catch (error) {
-        console.error('Failed to get user profile:', error)
-        clearAuthState()
+        console.warn('获取用户信息失败:', error)
+        // 如果获取用户信息失败，检查是否是认证错误
+        if (error.response?.status === 401) {
+          // 尝试刷新token
+          const refreshToken = tokenUtils.getRefreshToken()
+          if (refreshToken && !tokenUtils.isTokenExpired(refreshToken)) {
+            try {
+              await refreshTokens()
+            } catch (refreshError) {
+              console.warn('刷新令牌失败:', refreshError)
+              clearAuthState()
+            }
+          } else {
+            clearAuthState()
+          }
+        }
+        // 对于非认证错误，不清除token，保持登录状态
       }
     } catch (error) {
       console.error('Auth initialization failed:', error)
@@ -105,8 +122,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return
     }
 
-    // 如果token在5分钟内过期，尝试刷新
-    if (tokenUtils.isTokenExpired(accessToken, 5 * 60)) {
+    // 检查token是否已经过期（而不是即将过期）
+    if (tokenUtils.isTokenExpired(accessToken)) {
       try {
         await refreshTokens()
       } catch (error) {
@@ -114,6 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await logout()
       }
     }
+    // 移除了"即将过期"的检查，避免刚登录就触发刷新
   }
 
   const refreshTokens = async () => {
@@ -130,12 +148,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       tokenUtils.setRefreshToken(response.refreshToken)
     }
 
-    // 刷新token后需要重新获取用户信息
+    // 刷新token后获取用户信息
     try {
       const userData = await authApi.getCurrentUser()
       setUser(userData)
     } catch (error) {
       console.error('Failed to get user after token refresh:', error)
+      // 如果获取用户信息失败，尝试从token中解析基本信息
+      const userFromToken = tokenUtils.getUserFromToken()
+      if (userFromToken) {
+        setUser({
+          id: userFromToken.id,
+          email: userFromToken.email,
+          role: userFromToken.role,
+          username: '',
+          displayName: '',
+          createdAt: '',
+          updatedAt: ''
+        })
+      }
     }
   }
 
@@ -148,27 +179,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (credentials: LoginRequest) => {
     try {
       setIsLoading(true)
-      
       const response = await authApi.login(credentials)
-      
       // 保存tokens
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
-      
       // 设置用户状态
       setUser(response.user)
-      
       toast.success('登录成功！')
-      
-      // 等待状态完全同步后再跳转
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
-      // 根据用户角色跳转
-      if (response.user.role === 'photographer') {
-        router.push('/dashboard')
-      } else {
-        router.push('/join')
-      }
+      setTimeout(() => {
+        window.location.href = response.user.role === 'photographer' ? '/dashboard' : '/join'
+      }, 200)
     } catch (error: any) {
       const message = error.response?.data?.message || '登录失败，请检查用户名和密码'
       toast.error(message)
@@ -181,27 +201,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const register = async (data: RegisterRequest) => {
     try {
       setIsLoading(true)
-      
       const response = await authApi.register(data)
-      
-      // 保存tokens
       tokenUtils.setAccessToken(response.accessToken)
       tokenUtils.setRefreshToken(response.refreshToken)
-      
-      // 设置用户状态
       setUser(response.user)
-      
       toast.success('注册成功！')
-      
-      // 等待状态完全同步后再跳转
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
-      // 根据用户角色跳转
-      if (response.user.role === 'photographer') {
-        router.push('/dashboard')
-      } else {
-        router.push('/join')
-      }
+      setTimeout(() => {
+        window.location.href = response.user.role === 'photographer' ? '/dashboard' : '/join'
+      }, 200)
     } catch (error: any) {
       const message = error.response?.data?.message || '注册失败，请重试'
       toast.error(message)

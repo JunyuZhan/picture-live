@@ -34,10 +34,26 @@ import { sessionApi } from '@/lib/api/session'
 // 从API获取会话数据
 const fetchSessions = async (): Promise<Session[]> => {
   try {
+    console.debug('Starting to fetch sessions...')
     const response = await sessionApi.getMySessions()
+    console.debug('Sessions API response:', response)
     return response.sessions || []
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching sessions:', error)
+    console.error('Error details:', {
+      status: error?.response?.status,
+      message: error?.message,
+      response: error?.response?.data,
+      config: error?.config
+    })
+    
+    // 检查是否是认证错误
+    if (error.response?.status === 401 || error.message?.includes('Authentication failed')) {
+      console.warn('Authentication failed, user will be redirected to login')
+      // 不显示错误提示，让 auth provider 处理重定向
+      return []
+    }
+    
     toast.error('获取会话列表失败')
     return []
   }
@@ -48,6 +64,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { user, isLoading: authLoading, isAuthenticated } = useAuth()
   const router = useRouter()
+  console.log('DASHBOARD user:', user);
 
   useEffect(() => {
     // 等待认证状态加载完成
@@ -58,8 +75,8 @@ export default function DashboardPage() {
     // 如果未认证，延迟一下再跳转，避免状态同步问题
     if (!isAuthenticated) {
       const timer = setTimeout(() => {
-        router.push('/login')
-      }, 100)
+        router.push('/login?session_expired=true')
+      }, 500) // 增加延迟时间，给认证状态更多时间初始化
       return () => clearTimeout(timer)
     }
 
@@ -67,11 +84,21 @@ export default function DashboardPage() {
     const loadSessions = async () => {
       try {
         setIsLoading(true)
+        console.debug('Fetching sessions...')
         const sessions = await fetchSessions()
+        console.debug('Sessions fetched successfully:', sessions.length)
         setSessions(sessions)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading sessions:', error)
-        toast.error('加载会话列表失败')
+        console.error('Error details:', {
+          status: error?.response?.status,
+          message: error?.message,
+          response: error?.response?.data
+        })
+        // 只有在非 401 错误时才显示错误提示
+        if (error?.response?.status !== 401) {
+          toast.error('加载会话列表失败')
+        }
       } finally {
         setIsLoading(false)
       }
@@ -147,6 +174,10 @@ export default function DashboardPage() {
   const copyAccessCode = (accessCode: string) => {
     navigator.clipboard.writeText(accessCode)
     toast.success('访问码已复制到剪贴板')
+  }
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-lg text-gray-500">加载中...</div>;
   }
 
   if (!user || user.role !== 'photographer') {

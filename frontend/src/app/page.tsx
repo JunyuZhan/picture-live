@@ -485,7 +485,7 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               准备开始您的照片直播之旅？
             </h2>
-            <p className="text-xl text-blue-100 mb-8">
+            <p className="text-xl text-primary font-bold mb-8 drop-shadow-lg">
               立即注册，体验专业的实时照片分享服务
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

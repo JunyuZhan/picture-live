@@ -5,6 +5,7 @@ import type { ApiResponse, ApiError } from '@/types/api'
 
 // API基础配置
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+console.log('API_BASE_URL:', process.env.NEXT_PUBLIC_API_URL);
 const API_TIMEOUT = 30000 // 30 seconds
 
 // 创建axios实例
@@ -19,24 +20,48 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器 - 添加认证token
 apiClient.interceptors.request.use(
   async (config) => {
+    // 调试：输出最终请求URL
+    console.log('Final request URL:', (config.baseURL || '') + (config.url || ''));
+    // 如果是登录或注册请求，不需要添加token
+    if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
+      config.metadata = { startTime: new Date() }
+      return config
+    }
+
+    // 获取访问令牌
     let token = tokenUtils.getAccessToken()
+    console.debug('Request interceptor - Initial token:', token ? 'exists' : 'null')
     
-    // 自动刷新过期token
+    // 检查令牌是否过期
     if (token && tokenUtils.isTokenExpired(token)) {
+      console.debug('Token expired, attempting refresh')
       try {
-        const newToken = await tokenUtils.refreshToken()
-        token = newToken
+        token = await tokenUtils.refreshToken()
+        console.debug('Token refresh successful')
       } catch (e) {
         console.warn('Token refresh failed:', e)
-        window.location.href = '/login?expired=true'
-        return config
+        tokenUtils.removeTokens()
+        token = null
+        // 不在这里重定向，让响应拦截器处理 401 错误
       }
+    }
+
+    // 如果没有token，再次尝试获取（可能在登录过程中刚刚保存）
+    if (!token) {
+      token = tokenUtils.getAccessToken()
+      console.debug('Retry getting token from storage:', token ? 'found' : 'not found')
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.debug('Authorization header set for:', config.url)
+      console.debug('Token preview:', token.substring(0, 20) + '...')
     } else {
-      console.warn('No valid access token available')
+      // 只有在需要认证的请求中才警告
+      if (!config.url?.includes('/auth/')) {
+        console.warn('No valid access token available for:', config.url)
+        console.warn('Proceeding without token, backend will return 401 if auth required')
+      }
     }
 
     config.metadata = { startTime: new Date() }
@@ -71,6 +96,11 @@ apiClient.interceptors.response.use(
     const { status, data } = error.response
     
     if (status === 401 && !originalRequest._retry) {
+      // 如果是登录或注册请求失败，不进行token刷新
+      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
+        return Promise.reject(error)
+      }
+
       originalRequest._retry = true
       
       try {
@@ -81,9 +111,13 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.warn('令牌刷新失败，跳转登录页面')
         tokenUtils.removeTokens()
-        window.location.href = '/login?session_expired=true'
+        // 只有在非登录页面时才重定向
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = '/login?session_expired=true'
+        }
+        // 返回一个明确的认证失败错误，而不是原始的 401 错误
+        return Promise.reject(new Error('Authentication failed and token refresh failed'))
       }
-      return Promise.reject(error)
     }
     
     const apiError: ApiError = {

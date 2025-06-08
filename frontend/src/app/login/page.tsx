@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Camera, Mail, Lock } from 'lucide-react'
+import { Eye, EyeOff, Camera, Mail, Lock, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/components/providers/auth-provider'
 import { LoginRequest } from '@/types/auth'
@@ -21,8 +23,10 @@ interface LoginFormData {
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const [sessionExpired, setSessionExpired] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { login } = useAuth()
 
   const {
     register,
@@ -36,10 +40,22 @@ export default function LoginPage() {
     },
   })
 
+  useEffect(() => {
+    // 检查是否因为会话过期而重定向到登录页
+    if (searchParams.get('session_expired') === 'true') {
+      setSessionExpired(true)
+    }
+  }, [searchParams])
+
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true)
       await login({ email: data.email, password: data.password })
+      // 登录成功后清除会话过期状态和 URL 参数
+      setSessionExpired(false)
+      if (searchParams.get('session_expired') === 'true') {
+        router.replace('/login')
+      }
     } catch (error: any) {
       console.error('Login failed:', error)
       // 错误处理已在AuthProvider中完成
@@ -69,6 +85,13 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {sessionExpired && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-amber-800 text-sm">
+                  您的会话已过期，请重新登录
+                </p>
+              </div>
+            )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* 邮箱输入 */}
               <div className="space-y-2">
