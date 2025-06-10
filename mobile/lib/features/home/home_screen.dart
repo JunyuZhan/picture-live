@@ -119,7 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             Tab(
               icon: Icon(Icons.group_outlined),
-              text: '会话',
+              text: '相册',
             ),
             Tab(
               icon: Icon(Icons.photo_library_outlined),
@@ -168,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             
             const SizedBox(height: 24),
             
-            // 最近会话
+            // 最近相册
             _buildRecentSessions(),
             
             const SizedBox(height: 24),
@@ -263,7 +263,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '最近会话',
+              '最近相册',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -289,8 +289,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         else if (sessionsState.sessions.isEmpty)
           const EmptyState(
             icon: Icons.group_outlined,
-            title: '暂无会话',
-            subtitle: '创建您的第一个会话开始分享吧！',
+            title: '暂无相册',
+            subtitle: '创建您的第一个相册开始分享吧！',
           )
         else
           SizedBox(
@@ -386,8 +386,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (state.sessions.isEmpty) {
       return const EmptyState(
         icon: Icons.group_outlined,
-        title: '暂无会话',
-        subtitle: '创建您的第一个会话开始分享吧！',
+        title: '暂无相册',
+        subtitle: '创建您的第一个相册开始分享吧！',
       );
     }
     

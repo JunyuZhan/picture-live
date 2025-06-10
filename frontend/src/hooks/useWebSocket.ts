@@ -199,7 +199,7 @@ export function useWebSocket() {
 }
 
 /**
- * 会话WebSocket管理hook
+ * 相册WebSocket管理hook
  */
 export function useSessionWebSocket(sessionId?: string) {
   const [isJoined, setIsJoined] = useState(false)
@@ -207,7 +207,7 @@ export function useSessionWebSocket(sessionId?: string) {
   const { isConnected, client } = useWebSocket()
   const currentSessionRef = useRef<string | null>(null)
 
-  // 加入会话
+  // 加入相册
   const joinSession = useCallback(async (id: string) => {
     if (!isConnected || !id) return
 
@@ -216,13 +216,13 @@ export function useSessionWebSocket(sessionId?: string) {
       setIsJoined(true)
       currentSessionRef.current = id
     } catch (error: any) {
-      toast.error('加入会话失败', {
+      toast.error('加入相册失败', {
         description: error.message,
       })
     }
   }, [isConnected, client])
 
-  // 离开会话
+  // 离开相册
   const leaveSession = useCallback(async () => {
     if (!currentSessionRef.current) return
 
@@ -242,11 +242,11 @@ export function useSessionWebSocket(sessionId?: string) {
     client.sendChatMessage(currentSessionRef.current, content)
   }, [isConnected, client])
 
-  // 监听会话相关事件
+  // 监听相册相关事件
   useEffect(() => {
     const handleSessionJoined = (data: any) => {
       setIsJoined(true)
-      toast.success('已加入会话', {
+      toast.success('已加入相册', {
         description: data.session.title,
       })
     }
@@ -276,7 +276,7 @@ export function useSessionWebSocket(sessionId?: string) {
     }
   }, [client])
 
-  // 自动加入/离开会话
+  // 自动加入/离开相册
   useEffect(() => {
     if (sessionId && isConnected && !isJoined) {
       joinSession(sessionId)
@@ -285,7 +285,7 @@ export function useSessionWebSocket(sessionId?: string) {
     }
   }, [sessionId, isConnected, isJoined, joinSession, leaveSession])
 
-  // 组件卸载时离开会话
+  // 组件卸载时离开相册
   useEffect(() => {
     return () => {
       if (isJoined) {

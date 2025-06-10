@@ -160,25 +160,25 @@ export function SessionCard({
                 {session.status === 'scheduled' && (
                   <DropdownMenuItem onClick={(e) => handleAction('start', e)}>
                     <Play className="w-4 h-4 mr-2" />
-                    开始会话
+                    开始相册
                   </DropdownMenuItem>
                 )}
                 {session.status === 'live' && (
                   <DropdownMenuItem onClick={(e) => handleAction('pause', e)}>
                     <Pause className="w-4 h-4 mr-2" />
-                    暂停会话
+                    暂停相册
                   </DropdownMenuItem>
                 )}
                 {session.status === 'paused' && (
                   <DropdownMenuItem onClick={(e) => handleAction('start', e)}>
                     <Play className="w-4 h-4 mr-2" />
-                    恢复会话
+                    恢复相册
                   </DropdownMenuItem>
                 )}
                 {(session.status === 'live' || session.status === 'paused') && (
                   <DropdownMenuItem onClick={(e) => handleAction('end', e)}>
                     <Square className="w-4 h-4 mr-2" />
-                    结束会话
+                    结束相册
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />

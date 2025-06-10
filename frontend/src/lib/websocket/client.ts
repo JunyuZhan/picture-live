@@ -17,7 +17,7 @@ export interface WebSocketEvents {
   disconnect: (reason: string) => void
   connect_error: (error: Error) => void
   
-  // 会话事件
+  // 相册事件
   'session:joined': (data: { session: Session; participant: SessionParticipant }) => void
   'session:left': (data: { sessionId: string; participantId: string }) => void
   'session:updated': (data: { session: Session }) => void
@@ -216,7 +216,7 @@ export class WebSocketClient {
   }
 
   /**
-   * 加入会话
+   * 加入相册
    */
   async joinSession(sessionId: string): Promise<void> {
     if (!this.socket?.connected) {
@@ -242,7 +242,7 @@ export class WebSocketClient {
   }
 
   /**
-   * 离开会话
+   * 离开相册
    */
   async leaveSession(sessionId?: string): Promise<void> {
     const targetSessionId = sessionId || this.currentSessionId
@@ -338,7 +338,7 @@ export class WebSocketClient {
   }
 
   /**
-   * 获取当前会话ID
+   * 获取当前相册ID
    */
   get sessionId(): string | null {
     return this.currentSessionId

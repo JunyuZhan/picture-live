@@ -133,7 +133,7 @@ class FileHandler {
             const uniqueFilename = this.generateUniqueFilename(file.originalname);
             const fileBaseName = path.parse(uniqueFilename).name;
             
-            // 创建会话目录
+            // 创建相册目录
             const sessionDir = path.join(this.uploadPath, 'photos', sessionId);
             await fs.mkdir(sessionDir, { recursive: true });
             

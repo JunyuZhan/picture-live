@@ -21,9 +21,14 @@ export interface UpdateProfileRequest {
 export interface CreateSessionRequest {
   title: string
   description?: string
+  detailedDescription?: string
+  coverImage?: string
   location?: string
+  eventStartDate?: string
+  eventEndDate?: string
+  type?: 'wedding' | 'event' | 'portrait' | 'commercial' | 'travel' | 'other'
   scheduledAt?: string
-  isPrivate?: boolean
+  isPublic?: boolean
   maxViewers?: number
   settings?: SessionSettings
 }
@@ -39,8 +44,8 @@ export interface UpdateSessionRequest {
 }
 
 export interface JoinSessionRequest {
-  sessionId: string
-  accessCode?: string
+  sessionId?: string
+  accessCode: string
 }
 
 export interface UploadPhotoRequest {
@@ -100,12 +105,18 @@ export interface User {
   id: string
   email: string
   name: string
+  username?: string
+  displayName?: string
   role: 'photographer' | 'client' | 'admin'
   avatar?: string
+  avatarUrl?: string
   bio?: string
   isVerified: boolean
+  isActive?: boolean
+  emailVerified?: boolean
   createdAt: string
   updatedAt: string
+  lastLoginAt?: string
   profile?: UserProfile
 }
 
@@ -138,7 +149,11 @@ export interface Session {
   id: string
   title: string
   description?: string
+  detailedDescription?: string
+  coverImage?: string
   location?: string
+  eventStartDate?: string
+  eventEndDate?: string
   photographerId: string
   photographer: User
   status: SessionStatus
@@ -163,12 +178,35 @@ export type SessionStatus =
   | 'ended'
   | 'cancelled'
 
+export interface WatermarkSettings {
+  enabled: boolean
+  type: 'text' | 'image'
+  text?: {
+    content: string
+    fontSize: number
+    fontFamily: string
+    color: string
+    opacity: number
+    position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+    offsetX: number
+    offsetY: number
+  }
+  image?: {
+    url: string
+    opacity: number
+    position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+    size: 'small' | 'medium' | 'large'
+    offsetX: number
+    offsetY: number
+  }
+}
+
 export interface SessionSettings {
   allowDownloads: boolean
-  allowLikes: boolean
-  allowComments: boolean
+  allowOriginalDownload?: boolean
   autoApprovePhotos: boolean
-  watermarkEnabled: boolean
+  watermark?: WatermarkSettings
+  defaultSortOrder?: 'upload_time' | 'capture_time' | 'file_name'
   qualitySettings: {
     preview: 'low' | 'medium' | 'high'
     download: 'original' | 'compressed'

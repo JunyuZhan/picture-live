@@ -30,29 +30,18 @@ const authenticateToken = async (req, res, next) => {
         // 验证JWT令牌
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // 验证用户是否仍然存在且活跃
-        const result = await db.query(
-            'SELECT id, username, email, role, is_active FROM users WHERE id = $1',
-            [decoded.userId]
-        );
-        
-        if (result.rows.length === 0) {
-            throw new AppError('用户不存在', 401);
-        }
-        
-        const user = result.rows[0];
-        
-        if (!user.is_active) {
+        // 直接使用JWT中的用户状态信息
+        if (!decoded.isActive) {
             throw new AppError('用户账户已被禁用', 401);
         }
         
         // 将用户信息添加到请求对象
         req.user = {
-            userId: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            isActive: user.is_active
+            userId: decoded.userId,
+            username: decoded.username,
+            email: decoded.email,
+            role: decoded.role,
+            isActive: decoded.isActive
         };
         
         next();
@@ -91,25 +80,18 @@ const optionalAuth = async (req, res, next) => {
         // 验证JWT令牌
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // 验证用户是否仍然存在且活跃
-        const result = await db.query(
-            'SELECT id, username, email, role, is_active FROM users WHERE id = $1',
-            [decoded.userId]
-        );
-        
-        if (result.rows.length === 0 || !result.rows[0].is_active) {
+        // 直接使用JWT中的用户信息
+        if (!decoded.isActive) {
             req.user = null;
             return next();
         }
         
-        const user = result.rows[0];
-        
         req.user = {
-            userId: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-            isActive: user.is_active
+            userId: decoded.userId,
+            username: decoded.username,
+            email: decoded.email,
+            role: decoded.role,
+            isActive: decoded.isActive
         };
         
         next();
@@ -213,18 +195,18 @@ const requireOwnership = (resourceType, paramName = 'id') => {
 };
 
 /**
- * 会话访问权限检查中间件
- * 检查用户是否有权访问指定会话
+ * 相册访问权限检查中间件
+ * 检查用户是否有权访问指定相册
  */
 const requireSessionAccess = async (req, res, next) => {
     try {
         const sessionId = req.params.sessionId || req.params.id;
         
         if (!sessionId) {
-            return next(new AppError('会话ID缺失', 400));
+            return next(new AppError('相册ID缺失', 400));
         }
         
-        // 查询会话信息
+        // 查询相册信息
         const result = await db.query(
             `SELECT id, user_id, is_public, access_code, status 
              FROM sessions WHERE id = $1`,
@@ -232,39 +214,44 @@ const requireSessionAccess = async (req, res, next) => {
         );
         
         if (result.rows.length === 0) {
-            return next(new AppError('会话不存在', 404));
+            return next(new AppError('相册不存在', 404));
         }
         
         const session = result.rows[0];
         
-        // 会话已结束且不是公开会话
+        // 相册已结束且不是公开相册
         if (session.status === 'ended' && !session.is_public) {
-            // 只有会话创建者和管理员可以访问已结束的私有会话
+            // 只有相册创建者和管理员可以访问已结束的私有相册
             if (!req.user || (req.user.userId !== session.user_id && req.user.role !== 'admin')) {
-                return next(new AppError('会话已结束', 403));
+                return next(new AppError('相册已结束', 403));
             }
         }
         
         // 检查访问权限
         let hasAccess = false;
+        let accessReason = '';
         
-        // 1. 会话创建者
+        // 1. 相册创建者
         if (req.user && req.user.userId === session.user_id) {
             hasAccess = true;
+            accessReason = 'owner';
         }
         // 2. 管理员
         else if (req.user && req.user.role === 'admin') {
             hasAccess = true;
+            accessReason = 'admin';
         }
-        // 3. 公开会话
+        // 3. 公开相册 - 任何人都可以访问
         else if (session.is_public) {
             hasAccess = true;
+            accessReason = 'public_session';
         }
-        // 4. 私有会话需要访问码
+        // 4. 私有相册需要访问码
         else if (!session.is_public && session.access_code) {
             const providedCode = req.headers['x-access-code'] || req.query.accessCode;
-            if (providedCode === session.access_code) {
+            if (providedCode && providedCode === session.access_code) {
                 hasAccess = true;
+                accessReason = 'access_code';
                 
                 // 记录访问日志
                 await db.query(
@@ -282,6 +269,22 @@ const requireSessionAccess = async (req, res, next) => {
                 );
             }
         }
+
+        // 记录详细的访问检查日志
+        logger.debug('相册访问权限检查', {
+            sessionId,
+            userId: req.user?.userId || 'anonymous',
+            sessionOwnerId: session.user_id,
+            userIdType: typeof req.user?.userId,
+            sessionOwnerIdType: typeof session.user_id,
+            userIdEquals: req.user?.userId === session.user_id,
+            isPublic: session.is_public,
+            hasAccessCode: !!session.access_code,
+            providedCode: req.headers['x-access-code'] || req.query.accessCode || 'none',
+            hasAccess,
+            accessReason,
+            ip: req.ip
+        });
         
         if (!hasAccess) {
             // 记录访问失败日志
@@ -299,10 +302,10 @@ const requireSessionAccess = async (req, res, next) => {
                 ]
             );
             
-            return next(new AppError('无权访问此会话', 403));
+            return next(new AppError('无权访问此相册', 403));
         }
         
-        // 将会话信息添加到请求对象
+        // 将相册信息添加到请求对象
         req.session = session;
         
         next();
@@ -397,12 +400,67 @@ const requireApiPermission = (permission) => {
     };
 };
 
+/**
+ * 相册所有者权限检查中间件
+ * 检查用户是否为指定相册的创建者
+ */
+const requireSessionOwnership = async (req, res, next) => {
+    try {
+        const sessionId = req.params.sessionId || req.params.id;
+        
+        if (!sessionId) {
+            return next(new AppError('相册ID缺失', 400));
+        }
+        
+        // 必须先进行身份验证
+        if (!req.user) {
+            return next(new AppError('需要登录', 401));
+        }
+        
+        // 查询相册信息
+        const result = await db.query(
+            `SELECT id, user_id, title FROM sessions WHERE id = $1`,
+            [sessionId]
+        );
+        
+        if (result.rows.length === 0) {
+            return next(new AppError('相册不存在', 404));
+        }
+        
+        const session = result.rows[0];
+        
+        // 检查是否为相册创建者或管理员
+        if (req.user.userId !== session.user_id && req.user.role !== 'admin') {
+            logger.warn('相册权限检查失败', {
+                sessionId,
+                sessionTitle: session.title,
+                userId: req.user.userId,
+                sessionOwnerId: session.user_id,
+                userRole: req.user.role,
+                ip: req.ip,
+                userAgent: req.get('User-Agent')
+            });
+            
+            return next(new AppError('无权操作此相册', 403));
+        }
+        
+        // 将相册信息添加到请求对象
+        req.session = session;
+        
+        next();
+        
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     authenticateToken,
     optionalAuth,
     requireRole,
     requireOwnership,
     requireSessionAccess,
+    requireSessionOwnership,
     authenticateApiKey,
     requireApiPermission
 };

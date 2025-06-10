@@ -7,7 +7,7 @@ import 'auth_provider.dart';
 
 part 'session_provider.freezed.dart';
 
-// 会话列表状态
+// 相册列表状态
 @freezed
 class SessionsState with _$SessionsState {
   const factory SessionsState({
@@ -19,7 +19,7 @@ class SessionsState with _$SessionsState {
   }) = _SessionsState;
 }
 
-// 单个会话状态
+// 单个相册状态
 @freezed
 class SessionDetailState with _$SessionDetailState {
   const factory SessionDetailState({
@@ -29,13 +29,13 @@ class SessionDetailState with _$SessionDetailState {
   }) = _SessionDetailState;
 }
 
-// 会话列表管理器
+// 相册列表管理器
 class SessionsNotifier extends StateNotifier<SessionsState> {
   final SessionService _sessionService;
   
   SessionsNotifier(this._sessionService) : super(const SessionsState());
   
-  // 加载会话列表
+  // 加载相册列表
   Future<void> loadSessions({bool refresh = false}) async {
     if (refresh) {
       state = state.copyWith(
@@ -73,7 +73,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
   
-  // 创建会话
+  // 创建相册
   Future<SessionModel?> createSession({
     required String title,
     required String description,
@@ -95,7 +95,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
       );
       
       if (session != null) {
-        // 将新会话添加到列表顶部
+        // 将新相册添加到列表顶部
         state = state.copyWith(
           sessions: [session, ...state.sessions],
         );
@@ -108,7 +108,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
   
-  // 更新会话
+  // 更新相册
   Future<bool> updateSession(SessionModel session) async {
     try {
       final updatedSession = await _sessionService.updateSession(session);
@@ -128,7 +128,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
   
-  // 删除会话
+  // 删除相册
   Future<bool> deleteSession(String sessionId) async {
     try {
       final success = await _sessionService.deleteSession(sessionId);
@@ -144,7 +144,7 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
   
-  // 搜索会话
+  // 搜索相册
   Future<void> searchSessions(String query) async {
     state = state.copyWith(
       isLoading: true,
@@ -176,13 +176,13 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
   }
 }
 
-// 会话详情管理器
+// 相册详情管理器
 class SessionDetailNotifier extends StateNotifier<SessionDetailState> {
   final SessionService _sessionService;
   
   SessionDetailNotifier(this._sessionService) : super(const SessionDetailState());
   
-  // 加载会话详情
+  // 加载相册详情
   Future<void> loadSession(String sessionId) async {
     state = state.copyWith(isLoading: true, error: null);
     
@@ -200,7 +200,7 @@ class SessionDetailNotifier extends StateNotifier<SessionDetailState> {
     }
   }
   
-  // 更新会话
+  // 更新相册
   Future<bool> updateSession(SessionModel session) async {
     try {
       final updatedSession = await _sessionService.updateSession(session);

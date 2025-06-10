@@ -99,7 +99,7 @@ export function SocketProvider({ children }: SocketProviderProps) {
 
       newSocket.on('session:ended', (data) => {
         console.log('Session ended:', data)
-        toast.success('拍摄会话已结束')
+        toast.success('拍摄相册已结束')
       })
 
       newSocket.on('user:joined', (data) => {

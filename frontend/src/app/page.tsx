@@ -19,6 +19,8 @@ import {
   Globe,
   Smartphone,
   Monitor,
+  LogOut,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,7 +45,7 @@ const features = [
   {
     icon: Shield,
     title: '隐私保护',
-    description: '灵活的隐私设置，支持私密会话和访问控制，保护您的珍贵回忆',
+    description: '灵活的隐私设置，支持私密相册和访问控制，保护您的珍贵回忆',
     color: 'text-purple-600',
     bgColor: 'bg-purple-100',
   },
@@ -124,14 +126,14 @@ const testimonials = [
 const stats = [
   { label: '活跃用户', value: '10,000+' },
   { label: '照片分享', value: '1,000,000+' },
-  { label: '成功会话', value: '50,000+' },
+  { label: '成功相册', value: '50,000+' },
   { label: '用户满意度', value: '99%' },
 ]
 
 export default function HomePage() {
   const [joinCode, setJoinCode] = useState('')
   const [mounted, setMounted] = useState(false)
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -142,6 +144,15 @@ export default function HomePage() {
     e.preventDefault()
     if (joinCode.trim()) {
       router.push(`/join?code=${joinCode.trim()}`)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      router.push('/')
+    } catch (error) {
+      console.error('登出失败:', error)
     }
   }
 
@@ -170,23 +181,30 @@ export default function HomePage() {
                 用户评价
               </a>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 md:space-x-4">
               {user ? (
                 <>
                   <Link href={user.role === 'photographer' ? '/dashboard' : '/join'}>
-                    <Button variant="outline">
-                      {user.role === 'photographer' ? '仪表板' : '加入会话'}
+                    <Button variant="outline" size="sm" className="flex items-center space-x-1 md:space-x-2">
+                      <User className="h-4 w-4" />
+                      <span className="hidden sm:inline">{user.role === 'photographer' ? '仪表板' : '开始使用'}</span>
                     </Button>
                   </Link>
-                  <span className="text-sm text-gray-600">欢迎，{user.name}</span>
+                  <div className="flex items-center space-x-1 md:space-x-2">
+                    <span className="text-sm text-gray-600 hidden md:inline">欢迎，{user.displayName || user.username}</span>
+                    <Button variant="ghost" size="sm" onClick={handleLogout} className="flex items-center space-x-1">
+                      <LogOut className="h-4 w-4" />
+                      <span className="hidden sm:inline">登出</span>
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
                   <Link href="/login">
-                    <Button variant="outline">登录</Button>
+                    <Button variant="outline" size="sm">登录</Button>
                   </Link>
                   <Link href="/register">
-                    <Button>注册</Button>
+                    <Button size="sm">注册</Button>
                   </Link>
                 </>
               )}
@@ -218,7 +236,7 @@ export default function HomePage() {
                   <Link href="/session/create">
                     <Button size="lg" className="w-full sm:w-auto">
                       <Camera className="h-5 w-5 mr-2" />
-                      创建直播会话
+                      创建直播相册
                     </Button>
                   </Link>
                 ) : (
@@ -494,14 +512,14 @@ export default function HomePage() {
                   <Link href="/session/create">
                     <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                       <Camera className="h-5 w-5 mr-2" />
-                      创建直播会话
+                      创建直播相册
                     </Button>
                   </Link>
                 ) : (
                   <Link href="/join">
                     <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                       <Users className="h-5 w-5 mr-2" />
-                      加入会话
+                      加入相册
                     </Button>
                   </Link>
                 )

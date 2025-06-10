@@ -38,11 +38,40 @@ export default function JoinSessionPage() {
   const onSubmit = async (data: JoinSessionFormData) => {
     try {
       setIsLoading(true)
-      await joinSession(data.accessCode, data.displayName)
-      toast.success('成功加入会话')
+      
+      // 先验证访问码是否有效，并获取相册ID
+      const response = await fetch(`http://localhost:3001/api/sessions/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessCode: data.accessCode,
+          displayName: data.displayName || '访客'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || '加入相册失败')
+      }
+
+      const result = await response.json()
+      
+      // 直接跳转到相册页面，访问码会自动在URL中传递或存储
+      if (result.data?.sessionId) {
+        // 存储访问码到 sessionStorage
+        sessionStorage.setItem(`session_${result.data.sessionId}_access_code`, data.accessCode)
+        router.push(`/session/${result.data.sessionId}`)
+      } else {
+        // 备用方案：使用传统的 joinSession 方法
+        await joinSession(data.accessCode, data.displayName)
+      }
+      
+      toast.success('成功加入相册')
     } catch (error: any) {
       console.error('Join session failed:', error)
-      toast.error(error.response?.data?.message || '加入会话失败，请检查访问码')
+      toast.error(error.message || '加入相册失败，请检查访问码')
     } finally {
       setIsLoading(false)
     }
@@ -63,9 +92,9 @@ export default function JoinSessionPage() {
                 <Users className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">加入拍摄会话</CardTitle>
+            <CardTitle className="text-2xl font-bold">加入拍摄相册</CardTitle>
             <CardDescription>
-              输入访问码加入正在进行的拍摄会话
+              输入访问码加入正在进行的拍摄相册
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -165,7 +194,7 @@ export default function JoinSessionPage() {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <span>加入会话</span>
+                    <span>加入相册</span>
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 )}
@@ -227,7 +256,7 @@ export default function JoinSessionPage() {
                   onClick={() => router.push('/dashboard')}
                   className="w-full"
                 >
-                  创建新会话
+                  创建新相册
                 </Button>
               )}
             </div>

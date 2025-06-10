@@ -80,7 +80,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
       final sessionService = ref.read(sessionServiceProvider);
       final photoService = ref.read(photoServiceProvider);
       
-      // 加载会话详情
+      // 加载相册详情
       if (_session == null) {
         _session = await sessionService.getSessionById(widget.sessionId);
       }
@@ -145,17 +145,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
       await sessionService.joinSession(widget.sessionId);
       
       setState(() => _isJoined = true);
-      _showSuccessSnackBar('成功加入会话');
+      _showSuccessSnackBar('成功加入相册');
       _loadSessionDetail(); // 重新加载数据
     } catch (e) {
-      _showErrorSnackBar('加入会话失败: ${e.toString()}');
+      _showErrorSnackBar('加入相册失败: ${e.toString()}');
     }
   }
 
   Future<void> _leaveSession() async {
     final confirmed = await _showConfirmDialog(
-      '离开会话',
-      '确定要离开这个会话吗？',
+      '离开相册',
+      '确定要离开这个相册吗？',
     );
     
     if (!confirmed) return;
@@ -165,10 +165,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
       await sessionService.leaveSession(widget.sessionId);
       
       setState(() => _isJoined = false);
-      _showSuccessSnackBar('已离开会话');
+      _showSuccessSnackBar('已离开相册');
       _loadSessionDetail(); // 重新加载数据
     } catch (e) {
-      _showErrorSnackBar('离开会话失败: ${e.toString()}');
+      _showErrorSnackBar('离开相册失败: ${e.toString()}');
     }
   }
 
@@ -358,7 +358,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
     if (_isLoading) {
       return Scaffold(
         appBar: CustomAppBar(
-          title: '会话详情',
+          title: '相册详情',
           showBackButton: true,
         ),
         body: const LoadingOverlay(isLoading: true),
@@ -368,7 +368,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
     if (_error != null) {
       return Scaffold(
         appBar: CustomAppBar(
-          title: '会话详情',
+          title: '相册详情',
           showBackButton: true,
         ),
         body: CustomErrorWidget(
@@ -381,11 +381,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
     if (_session == null) {
       return Scaffold(
         appBar: CustomAppBar(
-          title: '会话详情',
+          title: '相册详情',
           showBackButton: true,
         ),
         body: const NoDataEmptyState(
-          message: '会话不存在',
+          message: '相册不存在',
         ),
       );
     }
@@ -399,17 +399,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () {
-                // TODO: 导航到编辑会话页面
+                // TODO: 导航到编辑相册页面
               },
             ),
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
                 case 'share':
-                  // TODO: 分享会话
+                  // TODO: 分享相册
                   break;
                 case 'report':
-                  // TODO: 举报会话
+                  // TODO: 举报相册
                   break;
               }
             },
@@ -418,7 +418,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
                 value: 'share',
                 child: ListTile(
                   leading: Icon(Icons.share),
-                  title: Text('分享会话'),
+                  title: Text('分享相册'),
                 ),
               ),
               if (!_isOwner)
@@ -426,7 +426,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
                   value: 'report',
                   child: ListTile(
                     leading: Icon(Icons.report),
-                    title: Text('举报会话'),
+                    title: Text('举报相册'),
                   ),
                 ),
             ],
@@ -435,7 +435,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
       ),
       body: Column(
         children: [
-          // 会话信息卡片
+          // 相册信息卡片
           _buildSessionInfoCard(),
           
           // 操作按钮
@@ -576,7 +576,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
           if (!_isJoined && !_isOwner)
             Expanded(
               child: CustomButton(
-                text: '加入会话',
+                text: '加入相册',
                 onPressed: _joinSession,
                 backgroundColor: Theme.of(context).primaryColor,
               ),
@@ -584,7 +584,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
           if (_isJoined && !_isOwner) ..[
             Expanded(
               child: CustomButton(
-                text: '离开会话',
+                text: '离开相册',
                 onPressed: _leaveSession,
                 backgroundColor: Colors.red,
               ),
@@ -593,9 +593,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
           if (_isOwner)
             Expanded(
               child: CustomButton(
-                text: '管理会话',
+                text: '管理相册',
                 onPressed: () {
-                  // TODO: 导航到会话管理页面
+                  // TODO: 导航到相册管理页面
                 },
                 backgroundColor: Theme.of(context).primaryColor,
               ),
@@ -694,9 +694,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailItem('会话名称', _session!.name),
+          _buildDetailItem('相册名称', _session!.name),
           _buildDetailItem('描述', _session!.description ?? '无'),
-          _buildDetailItem('类型', _session!.isPublic ? '公开会话' : '私密会话'),
+          _buildDetailItem('类型', _session!.isPublic ? '公开相册' : '私密相册'),
           _buildDetailItem('创建时间', AppDateUtils.formatDateTime(_session!.createdAt)),
           _buildDetailItem('更新时间', AppDateUtils.formatDateTime(_session!.updatedAt)),
           _buildDetailItem('参与者数量', '${_participants.length} 人'),

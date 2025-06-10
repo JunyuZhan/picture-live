@@ -2,21 +2,28 @@ export interface Session {
   id: string
   title: string
   description?: string
-  accessCode: string
-  status: 'live' | 'paused' | 'ended'
-  type: 'wedding' | 'event' | 'portrait' | 'commercial' | 'other'
-  settings: SessionSettings
-  photographer: {
-    id: string
-    username: string
-    displayName?: string
-    avatar?: string
-  }
-  stats: SessionStats
+  accessCode?: string
+  status: 'active' | 'paused' | 'ended'
+  isPublic: boolean
+  settings?: any
+  watermarkEnabled: boolean
+  watermarkText?: string
+  reviewMode: boolean
+  autoTagEnabled: boolean
+  language?: string
+  totalPhotos: number
+  publishedPhotos: number
+  pendingPhotos?: number
+  rejectedPhotos?: number
+  totalViews: number
+  uniqueViewers: number
+  duration?: number
   createdAt: string
   updatedAt: string
   startedAt?: string
   endedAt?: string
+  creatorUsername: string
+  creatorDisplayName?: string
 }
 
 export interface SessionSettings {
@@ -132,7 +139,7 @@ export interface Comment {
 export interface SessionCreateRequest {
   title: string
   description?: string
-  type: Session['type']
+  type: 'wedding' | 'event' | 'portrait' | 'commercial' | 'other'
   settings: Partial<SessionSettings>
 }
 
@@ -190,7 +197,7 @@ export interface CommentListResponse {
 
 export interface SessionFilter {
   status?: Session['status']
-  type?: Session['type']
+  type?: 'wedding' | 'event' | 'portrait' | 'commercial' | 'other'
   search?: string
   tags?: string[]
   dateFrom?: string

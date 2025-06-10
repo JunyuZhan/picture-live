@@ -47,7 +47,7 @@ interface SessionSettingsForm {
   tags: string
 }
 
-// 从API获取会话数据
+// 从API获取相册数据
 const fetchSession = async (sessionId: string): Promise<Session> => {
   try {
     const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`)
@@ -64,7 +64,7 @@ const fetchSession = async (sessionId: string): Promise<Session> => {
   }
 }
 
-// 更新会话设置
+// 更新相册设置
 const updateSession = async (sessionId: string, updates: any): Promise<Session> => {
   try {
     const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`, {
@@ -114,7 +114,7 @@ export default function SessionSettingsPage() {
     const loadSession = async () => {
       try {
         setIsLoading(true)
-        // 这里应该调用API获取会话详情
+        // 这里应该调用API获取相册详情
         const sessionData = await fetchSession(sessionId)
         setSession(sessionData)
         
@@ -133,7 +133,7 @@ export default function SessionSettingsPage() {
         setValue('tags', sessionData.settings.tags.join(', '))
       } catch (error) {
         console.error('Load session failed:', error)
-        toast.error('加载会话失败')
+        toast.error('加载相册失败')
         router.push('/dashboard')
       } finally {
         setIsLoading(false)
@@ -172,7 +172,7 @@ export default function SessionSettingsPage() {
         tags: data.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
       }
 
-      // 这里应该调用API更新会话设置
+      // 这里应该调用API更新相册设置
       const updatedSession = await updateSession(sessionId, {
         title: data.title,
         description: data.description,
@@ -193,7 +193,7 @@ export default function SessionSettingsPage() {
   const handleDeleteSession = async () => {
     try {
       setIsDeleting(true)
-      // 这里应该调用API删除会话
+      // 这里应该调用API删除相册
       const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`, {
         method: 'DELETE'
       })
@@ -201,11 +201,11 @@ export default function SessionSettingsPage() {
       if (!response.ok) {
         throw new Error('Failed to delete session')
       }
-      toast.success('会话已删除')
+      toast.success('相册已删除')
       router.push('/dashboard')
     } catch (error) {
       console.error('Delete session failed:', error)
-      toast.error('删除会话失败')
+      toast.error('删除相册失败')
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
@@ -214,14 +214,14 @@ export default function SessionSettingsPage() {
 
   const handleSessionAction = async (action: 'pause' | 'resume' | 'end') => {
     try {
-      // 这里应该调用API执行会话操作
+      // 这里应该调用API执行相册操作
       await new Promise(resolve => setTimeout(resolve, 500))
       
       const newStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'live' : 'ended'
       setSession(prev => prev ? { ...prev, status: newStatus as any } : null)
       
       const actionText = action === 'pause' ? '暂停' : action === 'resume' ? '恢复' : '结束'
-      toast.success(`会话已${actionText}`)
+      toast.success(`相册已${actionText}`)
       
       if (action === 'end') {
         router.push('/dashboard')
@@ -248,9 +248,9 @@ export default function SessionSettingsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>会话不存在</CardTitle>
+            <CardTitle>相册不存在</CardTitle>
             <CardDescription>
-              请检查会话ID是否正确
+              请检查相册ID是否正确
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -272,7 +272,7 @@ export default function SessionSettingsPage() {
             <div className="flex items-center space-x-4">
               <Link href={`/session/${sessionId}`} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <ChevronLeft className="h-5 w-5" />
-                <span>返回会话</span>
+                <span>返回相册</span>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -286,8 +286,8 @@ export default function SessionSettingsPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">会话设置</h1>
-          <p className="text-gray-600">管理您的照片直播会话设置和权限</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">相册设置</h1>
+          <p className="text-gray-600">管理您的照片直播相册设置和权限</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -305,12 +305,12 @@ export default function SessionSettingsPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      会话标题
+                      相册标题
                     </label>
                     <input
-                      {...register('title', { required: '请输入会话标题' })}
+                      {...register('title', { required: '请输入相册标题' })}
                       className="input"
-                      placeholder="输入会话标题"
+                      placeholder="输入相册标题"
                     />
                     {errors.title && (
                       <p className="text-sm text-red-600 mt-1">{errors.title.message}</p>
@@ -318,13 +318,13 @@ export default function SessionSettingsPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      会话描述
+                      相册描述
                     </label>
                     <textarea
                       {...register('description')}
                       rows={3}
                       className="input"
-                      placeholder="输入会话描述（可选）"
+                      placeholder="输入相册描述（可选）"
                     />
                   </div>
                   <div>
@@ -365,7 +365,7 @@ export default function SessionSettingsPage() {
                     <div className="flex items-center space-x-3">
                       {watchIsPublic ? <Globe className="h-5 w-5 text-green-500" /> : <Lock className="h-5 w-5 text-gray-500" />}
                       <div>
-                        <div className="font-medium">公开会话</div>
+                        <div className="font-medium">公开相册</div>
                         <div className="text-sm text-gray-500">
                           允许任何人通过访问码加入
                         </div>
@@ -575,10 +575,10 @@ export default function SessionSettingsPage() {
 
           {/* 侧边栏 */}
           <div className="space-y-6">
-            {/* 会话状态 */}
+            {/* 相册状态 */}
             <Card>
               <CardHeader>
-                <CardTitle>会话状态</CardTitle>
+                <CardTitle>相册状态</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
@@ -597,14 +597,14 @@ export default function SessionSettingsPage() {
                       onClick={() => handleSessionAction('pause')}
                       className="w-full"
                     >
-                      暂停会话
+                      暂停相册
                     </Button>
                     <Button
                       variant="destructive"
                       onClick={() => handleSessionAction('end')}
                       className="w-full"
                     >
-                      结束会话
+                      结束相册
                     </Button>
                   </div>
                 )}
@@ -615,24 +615,24 @@ export default function SessionSettingsPage() {
                       onClick={() => handleSessionAction('resume')}
                       className="w-full"
                     >
-                      恢复会话
+                      恢复相册
                     </Button>
                     <Button
                       variant="destructive"
                       onClick={() => handleSessionAction('end')}
                       className="w-full"
                     >
-                      结束会话
+                      结束相册
                     </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* 会话统计 */}
+            {/* 相册统计 */}
             <Card>
               <CardHeader>
-                <CardTitle>会话统计</CardTitle>
+                <CardTitle>相册统计</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
@@ -662,10 +662,10 @@ export default function SessionSettingsPage() {
               </CardContent>
             </Card>
 
-            {/* 会话信息 */}
+            {/* 相册信息 */}
             <Card>
               <CardHeader>
-                <CardTitle>会话信息</CardTitle>
+                <CardTitle>相册信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div>
@@ -677,7 +677,7 @@ export default function SessionSettingsPage() {
                   <div className="font-medium">{formatDate(session.updatedAt)}</div>
                 </div>
                 <div>
-                  <span className="text-gray-600">会话ID</span>
+                  <span className="text-gray-600">相册ID</span>
                   <div className="font-mono text-xs bg-gray-100 p-2 rounded">{session.id}</div>
                 </div>
               </CardContent>
@@ -698,7 +698,7 @@ export default function SessionSettingsPage() {
                   className="w-full flex items-center space-x-2"
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span>删除会话</span>
+                  <span>删除相册</span>
                 </Button>
                 <p className="text-xs text-gray-500 mt-2">
                   删除后无法恢复，请谨慎操作
@@ -722,12 +722,12 @@ export default function SessionSettingsPage() {
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-gray-900">删除会话</h3>
+                <h3 className="text-lg font-medium text-gray-900">删除相册</h3>
                 <p className="text-sm text-gray-500">此操作无法撤销</p>
               </div>
             </div>
             <p className="text-gray-600 mb-6">
-              您确定要删除会话「{session.title}」吗？这将永久删除所有照片和相关数据。
+              您确定要删除相册「{session.title}」吗？这将永久删除所有照片和相关数据。
             </p>
             <div className="flex space-x-3">
               <Button

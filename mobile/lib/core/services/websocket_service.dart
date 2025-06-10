@@ -184,7 +184,7 @@ class WebSocketService {
     }
   }
   
-  /// 加入会话
+  /// 加入相册
   void joinSession(String sessionId) {
     sendMessage(WebSocketMessage(
       type: messageTypeJoinSession,
@@ -192,7 +192,7 @@ class WebSocketService {
     ));
   }
   
-  /// 离开会话
+  /// 离开相册
   void leaveSession(String sessionId) {
     sendMessage(WebSocketMessage(
       type: messageTypeLeaveSession,

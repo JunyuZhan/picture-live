@@ -364,7 +364,7 @@ final photoDetailProvider = StateNotifierProvider.family<PhotoDetailNotifier, Ph
   },
 );
 
-// 会话照片提供者
+// 相册照片提供者
 final sessionPhotosProvider = StateNotifierProvider.family<PhotosNotifier, PhotosState, String>(
   (ref, sessionId) {
     final photoService = ref.watch(photoServiceProvider);

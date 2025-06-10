@@ -1,6 +1,6 @@
 /**
  * WebSocket 实时通信处理器
- * 处理照片上传进度、会话状态更新、实时通知等功能
+ * 处理照片上传进度、相册状态更新、实时通知等功能
  */
 
 const jwt = require('jsonwebtoken');
@@ -113,26 +113,26 @@ class SocketHandler {
     setupSocketEvents(socket) {
         const userId = socket.user.userId;
         
-        // 加入会话房间
+        // 加入相册房间
         socket.on('join_session', async (data) => {
             try {
                 const { sessionId, accessCode } = data;
                 
-                // 验证会话访问权限
+                // 验证相册访问权限
                 const hasAccess = await this.verifySessionAccess(userId, sessionId, accessCode);
                 
                 if (!hasAccess) {
                     socket.emit('error', {
                         type: 'access_denied',
-                        message: '无权访问此会话'
+                        message: '无权访问此相册'
                     });
                     return;
                 }
                 
-                // 加入会话房间
+                // 加入相册房间
                 socket.join(`session:${sessionId}`);
                 
-                // 记录会话房间成员
+                // 记录相册房间成员
                 if (!this.sessionRooms.has(sessionId)) {
                     this.sessionRooms.set(sessionId, new Set());
                 }
@@ -148,18 +148,18 @@ class SocketHandler {
                 // 发送加入成功消息
                 socket.emit('session_joined', {
                     sessionId,
-                    message: '成功加入会话',
+                    message: '成功加入相册',
                     timestamp: new Date().toISOString()
                 });
                 
-                logger.info('用户加入会话房间', {
+                logger.info('用户加入相册房间', {
                     userId,
                     sessionId,
                     socketId: socket.id
                 });
                 
             } catch (error) {
-                logger.error('加入会话房间失败', {
+                logger.error('加入相册房间失败', {
                     userId,
                     error: error.message,
                     data
@@ -167,18 +167,18 @@ class SocketHandler {
                 
                 socket.emit('error', {
                     type: 'join_session_failed',
-                    message: '加入会话失败'
+                    message: '加入相册失败'
                 });
             }
         });
         
-        // 离开会话房间
+        // 离开相册房间
         socket.on('leave_session', (data) => {
             const { sessionId } = data;
             
             socket.leave(`session:${sessionId}`);
             
-            // 从会话房间记录中移除
+            // 从相册房间记录中移除
             if (this.sessionRooms.has(sessionId)) {
                 this.sessionRooms.get(sessionId).delete(socket.id);
                 
@@ -196,11 +196,11 @@ class SocketHandler {
             
             socket.emit('session_left', {
                 sessionId,
-                message: '已离开会话',
+                message: '已离开相册',
                 timestamp: new Date().toISOString()
             });
             
-            logger.info('用户离开会话房间', {
+            logger.info('用户离开相册房间', {
                 userId,
                 sessionId,
                 socketId: socket.id
@@ -211,7 +211,7 @@ class SocketHandler {
         socket.on('upload_progress', (data) => {
             const { sessionId, filename, progress, status } = data;
             
-            // 广播上传进度到会话房间
+            // 广播上传进度到相册房间
             socket.to(`session:${sessionId}`).emit('photo_upload_progress', {
                 userId,
                 username: socket.user.username,
@@ -227,13 +227,13 @@ class SocketHandler {
             try {
                 const { sessionId, message, type = 'text' } = data;
                 
-                // 验证会话访问权限
+                // 验证相册访问权限
                 const hasAccess = await this.verifySessionAccess(userId, sessionId);
                 
                 if (!hasAccess) {
                     socket.emit('error', {
                         type: 'access_denied',
-                        message: '无权在此会话中发送消息'
+                        message: '无权在此相册中发送消息'
                     });
                     return;
                 }
@@ -248,7 +248,7 @@ class SocketHandler {
                     timestamp: new Date().toISOString()
                 };
                 
-                // 广播消息到会话房间
+                // 广播消息到相册房间
                 this.io.to(`session:${sessionId}`).emit('new_message', messageData);
                 
                 // 可选：将消息存储到数据库或Redis
@@ -298,12 +298,12 @@ class SocketHandler {
                 }
             }
             
-            // 从会话房间记录中移除
+            // 从相册房间记录中移除
             for (const [sessionId, socketIds] of this.sessionRooms.entries()) {
                 if (socketIds.has(socket.id)) {
                     socketIds.delete(socket.id);
                     
-                    // 通知会话房间其他成员
+                    // 通知相册房间其他成员
                     socket.to(`session:${sessionId}`).emit('user_left', {
                         userId,
                         username: socket.user?.username,
@@ -327,7 +327,7 @@ class SocketHandler {
     }
     
     /**
-     * 验证会话访问权限
+     * 验证相册访问权限
      */
     async verifySessionAccess(userId, sessionId, accessCode = null) {
         try {
@@ -351,7 +351,7 @@ class SocketHandler {
             return result.rows[0].has_access;
             
         } catch (error) {
-            logger.error('验证会话访问权限失败', {
+            logger.error('验证相册访问权限失败', {
                 userId,
                 sessionId,
                 error: error.message
@@ -404,7 +404,7 @@ class SocketHandler {
     }
     
     /**
-     * 向会话房间广播消息
+     * 向相册房间广播消息
      */
     async broadcastToSession(sessionId, event, data) {
         try {
@@ -413,14 +413,14 @@ class SocketHandler {
                 timestamp: new Date().toISOString()
             });
             
-            logger.info('会话房间广播', {
+            logger.info('相册房间广播', {
                 sessionId,
                 event,
                 dataType: typeof data
             });
             
         } catch (error) {
-            logger.error('会话房间广播失败', {
+            logger.error('相册房间广播失败', {
                 sessionId,
                 event,
                 error: error.message
@@ -449,7 +449,7 @@ class SocketHandler {
     }
     
     /**
-     * 通知会话状态更新
+     * 通知相册状态更新
      */
     async notifySessionStatusUpdate(sessionId, sessionData) {
         await this.broadcastToSession(sessionId, 'session_status_updated', {
@@ -470,7 +470,7 @@ class SocketHandler {
     }
     
     /**
-     * 获取会话在线用户
+     * 获取相册在线用户
      */
     getSessionOnlineUsers(sessionId) {
         const socketIds = this.sessionRooms.get(sessionId) || new Set();

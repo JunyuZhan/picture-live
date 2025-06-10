@@ -17,26 +17,95 @@ export class AuthApi {
    * 用户登录
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', credentials)
-    return response.data!
+    const response = await api.post<{
+      user: User
+      tokens: {
+        accessToken: string
+        refreshToken: string
+        expiresIn: string
+      }
+    }>('/auth/login', credentials)
+    
+    console.log('🔍 authApi.login - 收到后端响应:', response)
+    console.log('🔍 authApi.login - response类型:', typeof response)
+    console.log('🔍 authApi.login - response.data:', response.data)
+    console.log('🔍 authApi.login - response.data类型:', typeof response.data)
+    console.log('🔍 authApi.login - response.data的keys:', response.data ? Object.keys(response.data) : 'null')
+    
+    // API client已经解包了后端响应，直接从response.data中解构
+    const responseData = response.data!
+    console.log('🔍 authApi.login - responseData:', responseData)
+    console.log('🔍 authApi.login - 准备解构user和tokens...')
+    
+    const { user, tokens } = responseData
+    
+    console.log('🔍 authApi.login - 提取后的数据:', {
+      user: user ? { id: user.id, username: user.username, role: user.role } : null,
+      tokens: {
+        accessToken: tokens.accessToken ? tokens.accessToken.substring(0, 20) + '...' : null,
+        refreshToken: tokens.refreshToken ? tokens.refreshToken.substring(0, 20) + '...' : null
+      }
+    })
+    
+    return {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken
+    }
   }
 
   /**
    * 用户注册
    */
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', userData)
-    return response.data!
+    const response = await api.post<{
+      success: boolean
+      message: string
+      data: {
+        user: User
+        tokens: {
+          accessToken: string
+          refreshToken: string
+          expiresIn: string
+        }
+      }
+    }>('/auth/register', userData)
+    
+    // 从后端的嵌套结构中提取数据
+    const responseData = response.data!
+    const { user, tokens } = responseData.data
+    
+    return {
+      user,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken
+    }
   }
 
   /**
    * 刷新访问令牌
    */
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    const response = await api.post<RefreshTokenResponse>('/auth/refresh', {
+    const response = await api.post<{
+      success: boolean
+      message: string
+      data: {
+        tokens: {
+          accessToken: string
+          refreshToken: string
+          expiresIn: string
+        }
+      }
+    }>('/auth/refresh', {
       refreshToken,
     })
-    return response.data!
+    
+    // 解构后端的嵌套响应结构
+    const { data } = response.data!
+    return {
+      accessToken: data.tokens.accessToken,
+      refreshToken: data.tokens.refreshToken
+    }
   }
 
   /**

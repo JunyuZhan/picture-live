@@ -333,7 +333,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       [
         SwitchListTile(
           title: const Text('自动上传'),
-          subtitle: const Text('拍照后自动上传到当前会话'),
+          subtitle: const Text('拍照后自动上传到当前相册'),
           value: _autoUploadEnabled,
           onChanged: (value) {
             setState(() => _autoUploadEnabled = value);

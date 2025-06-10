@@ -13,11 +13,11 @@ import type {
 } from '@/types/api'
 
 /**
- * 会话相关API服务
+ * 相册相关API服务
  */
 export class SessionApi {
   /**
-   * 创建新会话
+   * 创建新相册
    */
   async createSession(data: CreateSessionRequest): Promise<Session> {
     const response = await api.post<Session>('/sessions', data)
@@ -25,7 +25,7 @@ export class SessionApi {
   }
 
   /**
-   * 获取会话详情
+   * 获取相册详情
    */
   async getSession(sessionId: string): Promise<SessionResponse> {
     const response = await api.get<SessionResponse>(`/sessions/${sessionId}`)
@@ -33,7 +33,7 @@ export class SessionApi {
   }
 
   /**
-   * 更新会话信息
+   * 更新相册信息
    */
   async updateSession(
     sessionId: string,
@@ -44,14 +44,14 @@ export class SessionApi {
   }
 
   /**
-   * 删除会话
+   * 删除相册
    */
   async deleteSession(sessionId: string): Promise<void> {
     await api.delete(`/sessions/${sessionId}`)
   }
 
   /**
-   * 获取会话列表
+   * 获取相册列表
    */
   async getSessions(params?: {
     pagination?: PaginationParams
@@ -84,7 +84,7 @@ export class SessionApi {
   }
 
   /**
-   * 获取我的会话列表
+   * 获取我的相册列表
    */
   async getMySessions(params?: {
     pagination?: PaginationParams
@@ -116,7 +116,7 @@ export class SessionApi {
   }
 
   /**
-   * 加入会话
+   * 加入相册
    */
   async joinSession(data: JoinSessionRequest): Promise<SessionResponse> {
     const response = await api.post<SessionResponse>('/sessions/join', data)
@@ -124,14 +124,14 @@ export class SessionApi {
   }
 
   /**
-   * 离开会话
+   * 离开相册
    */
   async leaveSession(sessionId: string): Promise<void> {
     await api.post(`/sessions/${sessionId}/leave`)
   }
 
   /**
-   * 开始会话
+   * 开始相册
    */
   async startSession(sessionId: string): Promise<Session> {
     const response = await api.post<Session>(`/sessions/${sessionId}/start`)
@@ -139,7 +139,7 @@ export class SessionApi {
   }
 
   /**
-   * 暂停会话
+   * 暂停相册
    */
   async pauseSession(sessionId: string): Promise<Session> {
     const response = await api.post<Session>(`/sessions/${sessionId}/pause`)
@@ -147,7 +147,7 @@ export class SessionApi {
   }
 
   /**
-   * 恢复会话
+   * 恢复相册
    */
   async resumeSession(sessionId: string): Promise<Session> {
     const response = await api.post<Session>(`/sessions/${sessionId}/resume`)
@@ -155,7 +155,7 @@ export class SessionApi {
   }
 
   /**
-   * 结束会话
+   * 结束相册
    */
   async endSession(sessionId: string): Promise<Session> {
     const response = await api.post<Session>(`/sessions/${sessionId}/end`)
@@ -163,7 +163,7 @@ export class SessionApi {
   }
 
   /**
-   * 获取会话参与者列表
+   * 获取相册参与者列表
    */
   async getSessionParticipants(
     sessionId: string,
@@ -205,7 +205,7 @@ export class SessionApi {
   }
 
   /**
-   * 生成会话邀请链接
+   * 生成相册邀请链接
    */
   async generateInviteLink(sessionId: string): Promise<{
     inviteUrl: string
@@ -221,7 +221,7 @@ export class SessionApi {
   }
 
   /**
-   * 获取会话统计信息
+   * 获取相册统计信息
    */
   async getSessionStats(sessionId: string): Promise<{
     totalPhotos: number
@@ -265,7 +265,7 @@ export class SessionApi {
   }
 
   /**
-   * 搜索会话
+   * 搜索相册
    */
   async searchSessions(query: string, params?: {
     filters?: FilterParams
@@ -298,7 +298,7 @@ export class SessionApi {
   }
 
   /**
-   * 复制会话
+   * 复制相册
    */
   async duplicateSession(
     sessionId: string,
@@ -312,7 +312,7 @@ export class SessionApi {
   }
 
   /**
-   * 导出会话数据
+   * 导出相册数据
    */
   async exportSession(
     sessionId: string,
@@ -325,7 +325,7 @@ export class SessionApi {
   }
 
   /**
-   * 获取会话二维码
+   * 获取相册二维码
    */
   async getSessionQRCode(
     sessionId: string,

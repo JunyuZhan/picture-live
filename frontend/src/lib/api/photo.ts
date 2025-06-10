@@ -99,7 +99,7 @@ export class PhotoApi {
   }
 
   /**
-   * 获取会话照片列表
+   * 获取相册照片列表
    */
   async getSessionPhotos(
     sessionId: string,

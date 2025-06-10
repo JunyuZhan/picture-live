@@ -9,6 +9,7 @@ const { body, query, validationResult } = require('express-validator');
 const path = require('path');
 const fs = require('fs').promises;
 const sharp = require('sharp');
+const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/database');
 const redis = require('../config/redis');
@@ -20,7 +21,8 @@ const {
     optionalAuth, 
     requireRole, 
     requireOwnership, 
-    requireSessionAccess 
+    requireSessionAccess,
+    requireSessionOwnership 
 } = require('../middleware/auth');
 
 const router = express.Router();
@@ -119,28 +121,152 @@ async function generateMultiResolution(inputPath, watermarkOptions = null) {
         const metadata = await image.metadata();
         
         // 添加水印（如果需要）
-        if (watermarkOptions && watermarkOptions.text) {
-            const { text, position = 'bottom-right', opacity = 0.7 } = watermarkOptions;
-            
-            // 创建水印SVG
-            const fontSize = Math.max(metadata.width / 40, 24);
-            const watermarkSvg = `
-                <svg width="${metadata.width}" height="${metadata.height}">
-                    <text x="${position.includes('right') ? metadata.width - 20 : 20}" 
-                          y="${position.includes('bottom') ? metadata.height - 20 : 40}"
-                          font-family="Arial" font-size="${fontSize}" 
-                          fill="white" fill-opacity="${opacity}"
-                          text-anchor="${position.includes('right') ? 'end' : 'start'}">
-                        ${text}
-                    </text>
-                </svg>
-            `;
-            
-            image = image.composite([{
-                input: Buffer.from(watermarkSvg),
-                top: 0,
-                left: 0
-            }]);
+        if (watermarkOptions) {
+            if (watermarkOptions.type === 'text' && watermarkOptions.text) {
+                const { 
+                    text, 
+                    fontSize = 16, 
+                    fontFamily = 'Arial', 
+                    color = '#ffffff', 
+                    opacity = 0.8, 
+                    position = 'bottom-right',
+                    offsetX = 20,
+                    offsetY = 20
+                } = watermarkOptions;
+                
+                // 根据图片尺寸调整字体大小
+                const scaledFontSize = Math.max((metadata.width / 1920) * fontSize, 12);
+                
+                // 计算文字位置
+                let x, y, textAnchor;
+                switch (position) {
+                    case 'top-left':
+                        x = offsetX;
+                        y = offsetY + scaledFontSize;
+                        textAnchor = 'start';
+                        break;
+                    case 'top-right':
+                        x = metadata.width - offsetX;
+                        y = offsetY + scaledFontSize;
+                        textAnchor = 'end';
+                        break;
+                    case 'center':
+                        x = metadata.width / 2 + offsetX;
+                        y = metadata.height / 2 + offsetY;
+                        textAnchor = 'middle';
+                        break;
+                    case 'bottom-left':
+                        x = offsetX;
+                        y = metadata.height - offsetY;
+                        textAnchor = 'start';
+                        break;
+                    case 'bottom-right':
+                    default:
+                        x = metadata.width - offsetX;
+                        y = metadata.height - offsetY;
+                        textAnchor = 'end';
+                        break;
+                }
+                
+                // 创建水印SVG
+                const watermarkSvg = `
+                    <svg width="${metadata.width}" height="${metadata.height}">
+                        <text x="${x}" y="${y}"
+                              font-family="${fontFamily}" font-size="${scaledFontSize}" 
+                              fill="${color}" fill-opacity="${opacity}"
+                              text-anchor="${textAnchor}"
+                              style="text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                            ${text.replace(/[<>&"']/g, (match) => {
+                                const escapeMap = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;' };
+                                return escapeMap[match];
+                            })}
+                        </text>
+                    </svg>
+                `;
+                
+                image = image.composite([{
+                    input: Buffer.from(watermarkSvg),
+                    top: 0,
+                    left: 0
+                }]);
+                
+            } else if (watermarkOptions.type === 'image' && watermarkOptions.imageUrl) {
+                try {
+                    // 下载水印图片
+                    const watermarkResponse = await axios.get(watermarkOptions.imageUrl, { 
+                        responseType: 'arraybuffer',
+                        timeout: 10000 
+                    });
+                    const watermarkBuffer = Buffer.from(watermarkResponse.data);
+                    
+                    // 处理水印图片
+                    let watermarkImage = sharp(watermarkBuffer);
+                    const watermarkMeta = await watermarkImage.metadata();
+                    
+                    // 根据设置调整水印尺寸
+                    const { size = 'medium', opacity = 0.8, position = 'bottom-right', offsetX = 20, offsetY = 20 } = watermarkOptions;
+                    
+                    let watermarkWidth;
+                    switch (size) {
+                        case 'small':
+                            watermarkWidth = Math.min(metadata.width * 0.1, 100);
+                            break;
+                        case 'large':
+                            watermarkWidth = Math.min(metadata.width * 0.3, 300);
+                            break;
+                        case 'medium':
+                        default:
+                            watermarkWidth = Math.min(metadata.width * 0.2, 200);
+                            break;
+                    }
+                    
+                    // 调整水印尺寸并设置透明度
+                    const watermarkHeight = Math.round(watermarkWidth * (watermarkMeta.height / watermarkMeta.width));
+                    watermarkImage = await watermarkImage
+                        .resize(watermarkWidth, watermarkHeight)
+                        .png({ quality: 100 })
+                        .composite([{
+                            input: Buffer.from(`<svg><rect width="${watermarkWidth}" height="${watermarkHeight}" fill="rgba(255,255,255,${1-opacity})"/></svg>`),
+                            blend: 'dest-in'
+                        }])
+                        .toBuffer();
+                    
+                    // 计算水印位置
+                    let left, top;
+                    switch (position) {
+                        case 'top-left':
+                            left = offsetX;
+                            top = offsetY;
+                            break;
+                        case 'top-right':
+                            left = metadata.width - watermarkWidth - offsetX;
+                            top = offsetY;
+                            break;
+                        case 'center':
+                            left = Math.round((metadata.width - watermarkWidth) / 2) + offsetX;
+                            top = Math.round((metadata.height - watermarkHeight) / 2) + offsetY;
+                            break;
+                        case 'bottom-left':
+                            left = offsetX;
+                            top = metadata.height - watermarkHeight - offsetY;
+                            break;
+                        case 'bottom-right':
+                        default:
+                            left = metadata.width - watermarkWidth - offsetX;
+                            top = metadata.height - watermarkHeight - offsetY;
+                            break;
+                    }
+                    
+                    image = image.composite([{
+                        input: watermarkImage,
+                        left: Math.max(0, left),
+                        top: Math.max(0, top)
+                    }]);
+                    
+                } catch (error) {
+                    logger.warn('图片水印处理失败，跳过水印', { error: error.message });
+                }
+            }
         }
         
         // 原图（可能带水印）
@@ -230,10 +356,11 @@ async function generateAITags(imagePath) {
 /**
  * 上传照片
  * POST /api/sessions/:sessionId/photos
+ * 仅相册创建者（摄影师）可以上传照片
  */
 router.post('/:sessionId/photos', 
     authenticateToken, 
-    requireSessionAccess, 
+    requireSessionOwnership, 
     upload.array('photos', 20), 
     uploadValidation, 
     asyncHandler(async (req, res) => {
@@ -256,14 +383,14 @@ router.post('/:sessionId/photos',
             throw new AppError('没有上传文件', 400);
         }
         
-        // 获取会话信息
+        // 获取相册信息
         const sessionResult = await db.query(
             'SELECT * FROM sessions WHERE id = $1',
             [sessionId]
         );
         
         if (sessionResult.rows.length === 0) {
-            throw new AppError('会话不存在', 404);
+            throw new AppError('相册不存在', 404);
         }
         
         const session = sessionResult.rows[0];
@@ -280,14 +407,36 @@ router.post('/:sessionId/photos',
                     processedTags = [...new Set([...processedTags, ...aiTags])];
                 }
                 
-                // 水印配置
+                // 水印配置 - 从相册设置中读取
                 let watermarkOptions = null;
-                if (session.watermark_enabled) {
-                    watermarkOptions = {
-                        text: watermarkText || session.watermark_text || '照片直播',
-                        position: 'bottom-right',
-                        opacity: 0.7
-                    };
+                const sessionSettings = session.settings ? JSON.parse(session.settings) : {};
+                
+                if (sessionSettings.watermark && sessionSettings.watermark.enabled) {
+                    const watermarkConfig = sessionSettings.watermark;
+                    
+                    if (watermarkConfig.type === 'text' && watermarkConfig.text) {
+                        watermarkOptions = {
+                            type: 'text',
+                            text: watermarkText || watermarkConfig.text.content || '照片直播',
+                            fontSize: watermarkConfig.text.fontSize || 16,
+                            fontFamily: watermarkConfig.text.fontFamily || 'Arial',
+                            color: watermarkConfig.text.color || '#ffffff',
+                            opacity: (watermarkConfig.text.opacity || 80) / 100,
+                            position: watermarkConfig.text.position || 'bottom-right',
+                            offsetX: watermarkConfig.text.offsetX || 20,
+                            offsetY: watermarkConfig.text.offsetY || 20
+                        };
+                    } else if (watermarkConfig.type === 'image' && watermarkConfig.image && watermarkConfig.image.url) {
+                        watermarkOptions = {
+                            type: 'image',
+                            imageUrl: watermarkConfig.image.url,
+                            opacity: (watermarkConfig.image.opacity || 80) / 100,
+                            position: watermarkConfig.image.position || 'bottom-right',
+                            size: watermarkConfig.image.size || 'medium',
+                            offsetX: watermarkConfig.image.offsetX || 20,
+                            offsetY: watermarkConfig.image.offsetY || 20
+                        };
+                    }
                 }
                 
                 // 生成多分辨率版本
@@ -396,7 +545,7 @@ router.post('/:sessionId/photos',
 );
 
 /**
- * 获取会话照片列表
+ * 获取相册照片列表
  * GET /api/sessions/:sessionId/photos
  */
 router.get('/:sessionId/photos', 
@@ -529,7 +678,7 @@ router.get('/photos/:id', optionalAuth, asyncHandler(async (req, res) => {
     const isOwner = req.user && req.user.userId === session.user_id;
     const isAdmin = req.user && req.user.role === 'admin';
     
-    // 非公开会话需要验证访问权限
+    // 非公开相册需要验证访问权限
     if (!session.is_public && !isOwner && !isAdmin) {
         throw new AppError('无权访问此照片', 403);
     }
@@ -715,10 +864,11 @@ router.delete('/photos/:id', authenticateToken, requireOwnership('photo'), async
 /**
  * 批量操作照片
  * POST /api/sessions/:sessionId/photos/batch
+ * 仅相册创建者（摄影师）可以批量操作照片
  */
 router.post('/:sessionId/photos/batch', 
     authenticateToken, 
-    requireSessionAccess, 
+    requireSessionOwnership, 
     asyncHandler(async (req, res) => {
         const sessionId = req.params.sessionId;
         const { action, photoIds, tags, status } = req.body;
@@ -908,7 +1058,7 @@ router.get('/photos/:id/download', optionalAuth, asyncHandler(async (req, res) =
     const isOwner = req.user && req.user.userId === session.user_id;
     const isAdmin = req.user && req.user.role === 'admin';
     
-    // 非公开会话需要验证访问权限
+    // 非公开相册需要验证访问权限
     if (!session.is_public && !isOwner && !isAdmin) {
         throw new AppError('无权下载此照片', 403);
     }

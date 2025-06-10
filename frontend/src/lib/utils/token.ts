@@ -13,7 +13,14 @@ class TokenUtils {
   // Access Token methods
   getAccessToken(): string | null {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem(ACCESS_TOKEN_KEY)
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
+    
+    // 过滤无效的token值
+    if (!token || token === 'undefined' || token === 'null' || token === '') {
+      return null
+    }
+    
+    return token
   }
 
   setAccessToken(token: string): void {

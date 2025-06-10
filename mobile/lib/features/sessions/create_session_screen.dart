@@ -146,7 +146,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
       final sessionService = ref.read(sessionServiceProvider);
       
       if (_isEditing) {
-        // 更新会话
+        // 更新相册
         await sessionService.updateSession(
           sessionId: widget.sessionToEdit!.id,
           name: _nameController.text.trim(),
@@ -161,9 +161,9 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
           coverImage: _coverImage,
         );
         
-        _showSuccessSnackBar('会话更新成功');
+        _showSuccessSnackBar('相册更新成功');
       } else {
-        // 创建新会话
+        // 创建新相册
         final session = await sessionService.createSession(
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim().isEmpty 
@@ -177,9 +177,9 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
           coverImage: _coverImage,
         );
         
-        _showSuccessSnackBar('会话创建成功');
+        _showSuccessSnackBar('相册创建成功');
         
-        // 导航到会话详情页面
+        // 导航到相册详情页面
         Navigator.pushReplacementNamed(
           context,
           '/session-detail',
@@ -221,7 +221,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar(
-        title: _isEditing ? '编辑会话' : '创建会话',
+        title: _isEditing ? '编辑相册' : '创建相册',
         showBackButton: true,
         actions: [
           TextButton(
@@ -257,7 +257,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // 会话设置
+                // 相册设置
                 _buildSettingsSection(),
                 
                 const SizedBox(height: 24),
@@ -272,7 +272,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: CustomButton(
-                      text: _isEditing ? '保存更改' : '创建会话',
+                      text: _isEditing ? '保存更改' : '创建相册',
                       onPressed: _isLoading ? null : _saveSession,
                       isLoading: _isLoading,
                     ),
@@ -424,18 +424,18 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         
         CustomTextField(
           controller: _nameController,
-          labelText: '会话名称',
-          hintText: '输入会话名称',
+          labelText: '相册名称',
+          hintText: '输入相册名称',
           prefixIcon: Icons.title,
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return '请输入会话名称';
+              return '请输入相册名称';
             }
             if (value.trim().length < 2) {
-              return '会话名称至少需要2个字符';
+              return '相册名称至少需要2个字符';
             }
             if (value.trim().length > 50) {
-              return '会话名称不能超过50个字符';
+              return '相册名称不能超过50个字符';
             }
             return null;
           },
@@ -445,8 +445,8 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         
         MultilineTextField(
           controller: _descriptionController,
-          labelText: '会话描述',
-          hintText: '描述这个会话的目的和内容（可选）',
+          labelText: '相册描述',
+          hintText: '描述这个相册的目的和内容（可选）',
           prefixIcon: Icons.description,
           maxLines: 4,
           maxLength: 500,
@@ -466,7 +466,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '会话设置',
+          '相册设置',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -477,11 +477,11 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
           child: Column(
             children: [
               SwitchListTile(
-                title: const Text('公开会话'),
+                title: const Text('公开相册'),
                 subtitle: Text(
                   _isPublic 
-                      ? '任何人都可以发现并加入这个会话' 
-                      : '只有受邀请的人才能加入这个会话',
+                      ? '任何人都可以发现并加入这个相册' 
+                      : '只有受邀请的人才能加入这个相册',
                 ),
                 value: _isPublic,
                 onChanged: (value) {
@@ -516,7 +516,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '公开会话会出现在会话列表中，私密会话需要邀请链接才能加入。',
+                  '公开相册会出现在相册列表中，私密相册需要邀请链接才能加入。',
                   style: TextStyle(
                     color: Colors.blue[700],
                     fontSize: 12,
@@ -597,7 +597,7 @@ class _CreateSessionScreenState extends ConsumerState<CreateSessionScreen> {
         const SizedBox(height: 12),
         
         Text(
-          '标签可以帮助其他用户更容易找到你的会话',
+          '标签可以帮助其他用户更容易找到你的相册',
           style: TextStyle(
             color: Colors.grey[600],
             fontSize: 12,

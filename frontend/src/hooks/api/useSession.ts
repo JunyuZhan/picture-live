@@ -14,11 +14,11 @@ import type {
 } from '@/types/api'
 
 /**
- * 会话相关的React Query hooks
+ * 相册相关的React Query hooks
  */
 
 /**
- * 获取会话列表
+ * 获取相册列表
  */
 export function useSessions(params?: {
   pagination?: PaginationParams
@@ -33,7 +33,7 @@ export function useSessions(params?: {
 }
 
 /**
- * 获取用户的会话列表
+ * 获取用户的相册列表
  */
 export function useUserSessions(params?: {
   pagination?: PaginationParams
@@ -48,7 +48,7 @@ export function useUserSessions(params?: {
 }
 
 /**
- * 获取会话详情
+ * 获取相册详情
  */
 export function useSession(sessionId: string) {
   return useQuery({
@@ -67,7 +67,7 @@ export function useSession(sessionId: string) {
 }
 
 /**
- * 创建会话
+ * 创建相册
  */
 export function useCreateSession() {
   const router = useRouter()
@@ -76,21 +76,21 @@ export function useCreateSession() {
   return useMutation({
     mutationFn: (data: CreateSessionRequest) => sessionApi.createSession(data),
     onSuccess: (session: Session) => {
-      // 更新会话列表缓存
+      // 更新相册列表缓存
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
       
-      // 设置会话详情缓存
+      // 设置相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
-      toast.success('会话创建成功', {
-        description: `会话 "${session.title}" 已创建`,
+      toast.success('相册创建成功', {
+        description: `相册 "${session.title}" 已创建`,
       })
       
-      // 跳转到会话页面
+      // 跳转到相册页面
       router.push(`/session/${session.id}`)
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '创建会话失败'
+      const message = error?.response?.data?.message || '创建相册失败'
       toast.error('创建失败', {
         description: message,
       })
@@ -99,7 +99,7 @@ export function useCreateSession() {
 }
 
 /**
- * 更新会话
+ * 更新相册
  */
 export function useUpdateSession() {
   const queryClient = useQueryClient()
@@ -108,16 +108,16 @@ export function useUpdateSession() {
     mutationFn: ({ sessionId, data }: { sessionId: string; data: UpdateSessionRequest }) =>
       sessionApi.updateSession(sessionId, data),
     onSuccess: (session: Session) => {
-      // 更新会话详情缓存
+      // 更新相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
-      // 更新会话列表缓存
+      // 更新相册列表缓存
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
       
-      toast.success('会话更新成功')
+      toast.success('相册更新成功')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '更新会话失败'
+      const message = error?.response?.data?.message || '更新相册失败'
       toast.error('更新失败', {
         description: message,
       })
@@ -126,7 +126,7 @@ export function useUpdateSession() {
 }
 
 /**
- * 删除会话
+ * 删除相册
  */
 export function useDeleteSession() {
   const router = useRouter()
@@ -135,10 +135,10 @@ export function useDeleteSession() {
   return useMutation({
     mutationFn: (sessionId: string) => sessionApi.deleteSession(sessionId),
     onSuccess: (_, sessionId) => {
-      // 移除会话详情缓存
+      // 移除相册详情缓存
       queryClient.removeQueries({ queryKey: ['sessions', sessionId] })
       
-      // 更新会话列表缓存
+      // 更新相册列表缓存
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
       
       // 断开WebSocket连接
@@ -146,13 +146,13 @@ export function useDeleteSession() {
         wsClient.leaveSession(sessionId)
       }
       
-      toast.success('会话删除成功')
+      toast.success('相册删除成功')
       
       // 跳转到仪表板
       router.push('/dashboard')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '删除会话失败'
+      const message = error?.response?.data?.message || '删除相册失败'
       toast.error('删除失败', {
         description: message,
       })
@@ -161,7 +161,7 @@ export function useDeleteSession() {
 }
 
 /**
- * 加入会话
+ * 加入相册
  */
 export function useJoinSession() {
   const router = useRouter()
@@ -169,10 +169,10 @@ export function useJoinSession() {
 
   return useMutation({
     mutationFn: ({ accessCode, displayName }: { accessCode: string; displayName?: string }) =>
-      sessionApi.joinSession({ sessionId: accessCode, accessCode }),
+      sessionApi.joinSession({ accessCode }),
     onSuccess: async (response: SessionResponse) => {
       const session = response.session
-      // 设置会话详情缓存
+      // 设置相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
       // 连接WebSocket
@@ -182,15 +182,15 @@ export function useJoinSession() {
         console.error('Failed to join WebSocket session:', error)
       }
       
-      toast.success('加入会话成功', {
-        description: `已加入会话 "${session.title}"`,
+      toast.success('加入相册成功', {
+        description: `已加入相册 "${session.title}"`,
       })
       
-      // 跳转到会话页面
+      // 跳转到相册页面
       router.push(`/session/${session.id}`)
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '加入会话失败'
+      const message = error?.response?.data?.message || '加入相册失败'
       toast.error('加入失败', {
         description: message,
       })
@@ -199,7 +199,7 @@ export function useJoinSession() {
 }
 
 /**
- * 离开会话
+ * 离开相册
  */
 export function useLeaveSession() {
   const router = useRouter()
@@ -211,13 +211,13 @@ export function useLeaveSession() {
       // 断开WebSocket连接
       wsClient.leaveSession(sessionId)
       
-      toast.success('已离开会话')
+      toast.success('已离开相册')
       
       // 跳转到首页
       router.push('/')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '离开会话失败'
+      const message = error?.response?.data?.message || '离开相册失败'
       toast.error('操作失败', {
         description: message,
       })
@@ -226,7 +226,7 @@ export function useLeaveSession() {
 }
 
 /**
- * 开始会话
+ * 开始相册
  */
 export function useStartSession() {
   const queryClient = useQueryClient()
@@ -234,13 +234,13 @@ export function useStartSession() {
   return useMutation({
     mutationFn: (sessionId: string) => sessionApi.startSession(sessionId),
     onSuccess: (session: Session) => {
-      // 更新会话详情缓存
+      // 更新相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
-      toast.success('会话已开始')
+      toast.success('相册已开始')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '开始会话失败'
+      const message = error?.response?.data?.message || '开始相册失败'
       toast.error('操作失败', {
         description: message,
       })
@@ -249,7 +249,7 @@ export function useStartSession() {
 }
 
 /**
- * 暂停会话
+ * 暂停相册
  */
 export function usePauseSession() {
   const queryClient = useQueryClient()
@@ -257,13 +257,13 @@ export function usePauseSession() {
   return useMutation({
     mutationFn: (sessionId: string) => sessionApi.pauseSession(sessionId),
     onSuccess: (session: Session) => {
-      // 更新会话详情缓存
+      // 更新相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
-      toast.success('会话已暂停')
+      toast.success('相册已暂停')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '暂停会话失败'
+      const message = error?.response?.data?.message || '暂停相册失败'
       toast.error('操作失败', {
         description: message,
       })
@@ -272,7 +272,7 @@ export function usePauseSession() {
 }
 
 /**
- * 恢复会话
+ * 恢复相册
  */
 export function useResumeSession() {
   const queryClient = useQueryClient()
@@ -280,13 +280,13 @@ export function useResumeSession() {
   return useMutation({
     mutationFn: (sessionId: string) => sessionApi.resumeSession(sessionId),
     onSuccess: (session: Session) => {
-      // 更新会话详情缓存
+      // 更新相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
-      toast.success('会话已恢复')
+      toast.success('相册已恢复')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '恢复会话失败'
+      const message = error?.response?.data?.message || '恢复相册失败'
       toast.error('操作失败', {
         description: message,
       })
@@ -295,7 +295,7 @@ export function useResumeSession() {
 }
 
 /**
- * 结束会话
+ * 结束相册
  */
 export function useEndSession() {
   const queryClient = useQueryClient()
@@ -303,16 +303,16 @@ export function useEndSession() {
   return useMutation({
     mutationFn: (sessionId: string) => sessionApi.endSession(sessionId),
     onSuccess: (session: Session) => {
-      // 更新会话详情缓存
+      // 更新相册详情缓存
       queryClient.setQueryData(['sessions', session.id], session)
       
       // 断开WebSocket连接
       wsClient.leaveSession(session.id)
       
-      toast.success('会话已结束')
+      toast.success('相册已结束')
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '结束会话失败'
+      const message = error?.response?.data?.message || '结束相册失败'
       toast.error('操作失败', {
         description: message,
       })
@@ -321,7 +321,7 @@ export function useEndSession() {
 }
 
 /**
- * 获取会话参与者
+ * 获取相册参与者
  */
 export function useSessionParticipants(sessionId: string) {
   return useQuery({
@@ -333,7 +333,7 @@ export function useSessionParticipants(sessionId: string) {
 }
 
 /**
- * 获取会话统计
+ * 获取相册统计
  */
 export function useSessionStats(sessionId: string) {
   return useQuery({
@@ -375,7 +375,7 @@ export function useGenerateInviteLink() {
 }
 
 /**
- * 搜索会话
+ * 搜索相册
  */
 export function useSearchSessions() {
   return useMutation({
@@ -393,7 +393,7 @@ export function useSearchSessions() {
 }
 
 /**
- * 复制会话
+ * 复制相册
  */
 export function useDuplicateSession() {
   const queryClient = useQueryClient()
@@ -407,15 +407,15 @@ export function useDuplicateSession() {
       options?: Partial<CreateSessionRequest>
     }) => sessionApi.duplicateSession(sessionId, options),
     onSuccess: (session: Session) => {
-      // 更新会话列表缓存
+      // 更新相册列表缓存
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
       
-      toast.success('会话复制成功', {
-        description: `新会话 "${session.title}" 已创建`,
+      toast.success('相册复制成功', {
+        description: `新相册 "${session.title}" 已创建`,
       })
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || '复制会话失败'
+      const message = error?.response?.data?.message || '复制相册失败'
       toast.error('复制失败', {
         description: message,
       })
@@ -424,7 +424,7 @@ export function useDuplicateSession() {
 }
 
 /**
- * 导出会话数据
+ * 导出相册数据
  */
 export function useExportSession() {
   return useMutation({
@@ -452,7 +452,7 @@ export function useExportSession() {
 }
 
 /**
- * 获取会话二维码
+ * 获取相册二维码
  */
 export function useSessionQRCode(sessionId: string) {
   return useQuery({

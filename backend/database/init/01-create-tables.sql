@@ -21,17 +21,24 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 创建拍摄会话表
+-- 创建拍摄相册表
 CREATE TABLE IF NOT EXISTS sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    detailed_description TEXT,
+    cover_image TEXT,
+    location VARCHAR(200),
+    event_date DATE,
+    event_start_time TIME,
+    event_end_time TIME,
+    type VARCHAR(20) DEFAULT 'other' CHECK (type IN ('wedding', 'event', 'portrait', 'commercial', 'travel', 'other')),
     access_code VARCHAR(20),
     is_public BOOLEAN DEFAULT false,
     status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'paused', 'ended', 'archived')),
     
-    -- 会话配置
+    -- 相册配置
     settings JSONB DEFAULT '{}',
     watermark_enabled BOOLEAN DEFAULT false,
     watermark_text VARCHAR(255),
@@ -118,7 +125,7 @@ CREATE TABLE IF NOT EXISTS photos (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 创建会话访问记录表
+-- 创建相册访问记录表
 CREATE TABLE IF NOT EXISTS session_access_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
@@ -127,7 +134,7 @@ CREATE TABLE IF NOT EXISTS session_access_logs (
     access_code_used VARCHAR(20),
     access_granted BOOLEAN DEFAULT false,
     client_type VARCHAR(20) CHECK (client_type IN ('photographer', 'viewer', 'admin')),
-    session_duration INTEGER, -- 会话持续时间（秒）
+    session_duration INTEGER, -- 相册持续时间（秒）
     pages_viewed INTEGER DEFAULT 0,
     photos_viewed INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -207,10 +214,11 @@ CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 
--- 会话表索引
+-- 相册表索引
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_access_code ON sessions(access_code);
 CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(status);
+CREATE INDEX IF NOT EXISTS idx_sessions_type ON sessions(type);
 CREATE INDEX IF NOT EXISTS idx_sessions_is_public ON sessions(is_public);
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_started_at ON sessions(started_at);
@@ -271,7 +279,7 @@ CREATE TRIGGER update_upload_tasks_updated_at BEFORE UPDATE ON upload_tasks FOR 
 CREATE TRIGGER update_system_configs_updated_at BEFORE UPDATE ON system_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_api_keys_updated_at BEFORE UPDATE ON api_keys FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 创建触发器函数：更新会话统计信息
+-- 创建触发器函数：更新相册统计信息
 CREATE OR REPLACE FUNCTION update_session_stats()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -327,7 +335,7 @@ INSERT INTO system_configs (config_key, config_value, description, is_public) VA
 ('default_image_quality', '{"thumbnail": 60, "medium": 80, "original": 90}', '默认图片质量设置', true),
 ('ai_tagging_enabled', 'true', '是否启用AI标签功能', true),
 ('review_mode_default', 'false', '默认审核模式', true),
-('session_expiry_hours', '168', '会话过期时间（小时）', true),
+('session_expiry_hours', '168', '相册过期时间（小时）', true),
 ('upload_chunk_size', '1048576', '上传分块大小（字节）', true)
 ON CONFLICT (config_key) DO NOTHING;
 
@@ -336,7 +344,7 @@ INSERT INTO users (username, email, password_hash, display_name, role, is_active
 ('admin', 'admin@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj6hsxq/3Haa', '系统管理员', 'admin', true, true)
 ON CONFLICT (username) DO NOTHING;
 
--- 创建视图：会话详细信息
+-- 创建视图：相册详细信息
 CREATE OR REPLACE VIEW session_details AS
 SELECT 
     s.*,
@@ -380,7 +388,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 创建函数：获取会话统计信息
+-- 创建函数：获取相册统计信息
 CREATE OR REPLACE FUNCTION get_session_stats(session_uuid UUID)
 RETURNS TABLE(
     total_photos INTEGER,

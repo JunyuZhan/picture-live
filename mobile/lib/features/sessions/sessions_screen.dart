@@ -102,7 +102,7 @@ class _SessionsScreenState extends State<SessionsScreen>
         });
       } else {
         setState(() {
-          _error = response.message ?? '加载会话失败';
+          _error = response.message ?? '加载相册失败';
         });
       }
     } catch (e) {
@@ -241,12 +241,12 @@ class _SessionsScreenState extends State<SessionsScreen>
       
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('成功加入会话')),
+          const SnackBar(content: Text('成功加入相册')),
         );
         _onRefresh();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message ?? '加入会话失败')),
+          SnackBar(content: Text(response.message ?? '加入相册失败')),
         );
       }
     } catch (e) {
@@ -261,7 +261,7 @@ class _SessionsScreenState extends State<SessionsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('确认离开'),
-        content: Text('确定要离开会话"${session.name}"吗？'),
+        content: Text('确定要离开相册"${session.name}"吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -281,12 +281,12 @@ class _SessionsScreenState extends State<SessionsScreen>
         
         if (response.success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('已离开会话')),
+            const SnackBar(content: Text('已离开相册')),
           );
           _onRefresh();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(response.message ?? '离开会话失败')),
+            SnackBar(content: Text(response.message ?? '离开相册失败')),
           );
         }
       } catch (e) {
@@ -309,7 +309,7 @@ class _SessionsScreenState extends State<SessionsScreen>
     
     return Scaffold(
       appBar: CustomAppBar(
-        title: '会话',
+        title: '相册',
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -347,7 +347,7 @@ class _SessionsScreenState extends State<SessionsScreen>
       floatingActionButton: CustomFAB(
         onPressed: _onCreateSession,
         icon: Icons.add,
-        tooltip: '创建会话',
+        tooltip: '创建相册',
       ),
     );
   }
@@ -402,7 +402,7 @@ class _SessionsScreenState extends State<SessionsScreen>
   }
 }
 
-// 会话搜索委托
+// 相册搜索委托
 class SessionSearchDelegate extends SearchDelegate<Session?> {
   final SessionService sessionService;
   final Function(Session) onSessionTap;
@@ -415,7 +415,7 @@ class SessionSearchDelegate extends SearchDelegate<Session?> {
   });
   
   @override
-  String get searchFieldLabel => '搜索会话...';
+  String get searchFieldLabel => '搜索相册...';
   
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -448,7 +448,7 @@ class SessionSearchDelegate extends SearchDelegate<Session?> {
   Widget buildSuggestions(BuildContext context) {
     if (query.isEmpty) {
       return const Center(
-        child: Text('输入关键词搜索会话'),
+        child: Text('输入关键词搜索相册'),
       );
     }
     

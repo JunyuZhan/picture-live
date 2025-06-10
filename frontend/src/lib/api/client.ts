@@ -20,48 +20,25 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器 - 添加认证token
 apiClient.interceptors.request.use(
   async (config) => {
-    // 调试：输出最终请求URL
-    console.log('Final request URL:', (config.baseURL || '') + (config.url || ''));
-    // 如果是登录或注册请求，不需要添加token
-    if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
+    // 如果是登录、注册或refresh请求，不需要添加token或进行token检查
+    if (config.url?.includes('/auth/login') || 
+        config.url?.includes('/auth/register') || 
+        config.url?.includes('/auth/refresh')) {
       config.metadata = { startTime: new Date() }
       return config
     }
 
     // 获取访问令牌
     let token = tokenUtils.getAccessToken()
-    console.debug('Request interceptor - Initial token:', token ? 'exists' : 'null')
     
-    // 检查令牌是否过期
+    // 检查令牌是否过期（但不在这里刷新，交给响应拦截器处理）
     if (token && tokenUtils.isTokenExpired(token)) {
-      console.debug('Token expired, attempting refresh')
-      try {
-        token = await tokenUtils.refreshToken()
-        console.debug('Token refresh successful')
-      } catch (e) {
-        console.warn('Token refresh failed:', e)
-        tokenUtils.removeTokens()
-        token = null
-        // 不在这里重定向，让响应拦截器处理 401 错误
-      }
-    }
-
-    // 如果没有token，再次尝试获取（可能在登录过程中刚刚保存）
-    if (!token) {
-      token = tokenUtils.getAccessToken()
-      console.debug('Retry getting token from storage:', token ? 'found' : 'not found')
+      // 不在这里刷新token，避免并发问题
+      token = null
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-      console.debug('Authorization header set for:', config.url)
-      console.debug('Token preview:', token.substring(0, 20) + '...')
-    } else {
-      // 只有在需要认证的请求中才警告
-      if (!config.url?.includes('/auth/')) {
-        console.warn('No valid access token available for:', config.url)
-        console.warn('Proceeding without token, backend will return 401 if auth required')
-      }
     }
 
     config.metadata = { startTime: new Date() }
@@ -96,8 +73,10 @@ apiClient.interceptors.response.use(
     const { status, data } = error.response
     
     if (status === 401 && !originalRequest._retry) {
-      // 如果是登录或注册请求失败，不进行token刷新
-      if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
+      // 如果是登录、注册或refresh请求失败，不进行token刷新
+      if (originalRequest.url?.includes('/auth/login') || 
+          originalRequest.url?.includes('/auth/register') ||
+          originalRequest.url?.includes('/auth/refresh')) {
         return Promise.reject(error)
       }
 

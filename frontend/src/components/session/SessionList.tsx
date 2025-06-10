@@ -121,7 +121,7 @@ export function SessionList({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="搜索会话..."
+              placeholder="搜索相册..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -205,32 +205,32 @@ export function SessionList({
           {showCreateButton && (
             <Button onClick={onCreateSession}>
               <Plus className="w-4 h-4 mr-2" />
-              创建会话
+              创建相册
             </Button>
           )}
         </div>
       </div>
 
-      {/* 会话列表 */}
+      {/* 相册列表 */}
       {sortedSessions.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">
             {searchQuery || filterStatus !== 'all' ? (
               <div>
-                <p className="text-lg font-medium mb-2">未找到匹配的会话</p>
+                <p className="text-lg font-medium mb-2">未找到匹配的相册</p>
                 <p>尝试调整搜索条件或过滤器</p>
               </div>
             ) : (
               <div>
-                <p className="text-lg font-medium mb-2">还没有会话</p>
-                <p>创建您的第一个拍摄会话开始使用</p>
+                <p className="text-lg font-medium mb-2">还没有相册</p>
+                <p>创建您的第一个拍摄相册开始使用</p>
               </div>
             )}
           </div>
           {showCreateButton && (!searchQuery && filterStatus === 'all') && (
             <Button onClick={onCreateSession}>
               <Plus className="w-4 h-4 mr-2" />
-              创建会话
+              创建相册
             </Button>
           )}
         </div>
@@ -257,7 +257,7 @@ export function SessionList({
       {/* 结果统计 */}
       {sortedSessions.length > 0 && (
         <div className="text-sm text-gray-500 text-center">
-          显示 {sortedSessions.length} 个会话
+          显示 {sortedSessions.length} 个相册
           {searchQuery && ` · 搜索 "${searchQuery}"`}
           {filterStatus !== 'all' && ` · 筛选 "${getStatusText(filterStatus)}"`}
         </div>

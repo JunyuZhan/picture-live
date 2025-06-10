@@ -124,7 +124,7 @@ class Photo {
   
   String get displayTitle => title ?? originalFilename;
   String get uploaderName => uploader?.displayNameOrUsername ?? uploadedBy;
-  String get sessionName => session?.name ?? sessionId ?? '未知会话';
+  String get sessionName => session?.name ?? sessionId ?? '未知相册';
   double get aspectRatio => width / height;
   
   String get formattedFileSize {

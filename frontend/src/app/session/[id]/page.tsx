@@ -39,31 +39,45 @@ import { useSession } from '@/components/providers/session-provider'
 import { Session, Photo } from '@/types/session'
 import { SessionStatus } from '@/types/api'
 import { formatDate, formatTime } from '@/lib/utils'
+import { ApiClient } from '@/lib/api/client'
 
-// 从API获取会话和照片数据
-  const fetchSessionData = async (sessionId: string) => {
-    try {
-      const [sessionResponse, photosResponse] = await Promise.all([
-        fetch(`http://localhost:3001/api/sessions/${sessionId}`),
-        fetch(`http://localhost:3001/api/sessions/${sessionId}/photos`)
-      ])
-      
-      if (!sessionResponse.ok || !photosResponse.ok) {
-        throw new Error('Failed to fetch session data')
-      }
-      
-      const sessionData = await sessionResponse.json()
-      const photosData = await photosResponse.json()
-      
-      return {
-        session: sessionData.data.session,
-        photos: photosData.data.photos || []
-      }
-    } catch (error) {
-      console.error('Error fetching session data:', error)
-      throw error
+// 创建API客户端实例
+const apiClient = new ApiClient()
+
+// 从API获取相册和照片数据
+const fetchSessionData = async (sessionId: string, accessCode?: string) => {
+  try {
+    const headers: HeadersInit = {}
+    
+    // 如果提供了访问码，添加到请求头
+    if (accessCode) {
+      headers['x-access-code'] = accessCode
+    }
+
+    const [sessionResponse, photosResponse] = await Promise.all([
+      apiClient.get(`/sessions/${sessionId}`, { headers }),
+      apiClient.get(`/sessions/${sessionId}/photos`, { headers }).catch(error => {
+        console.warn('Failed to fetch photos:', error)
+        return { data: { photos: [] } }
+      })
+    ])
+    
+    return {
+      session: sessionResponse.data.session,
+      photos: photosResponse.data.photos || []
+    }
+  } catch (error: any) {
+    console.error('Error fetching session data:', error)
+    
+    if (error.code === 'HTTP_403') {
+      throw new Error('403: 无权访问此相册')
+    } else if (error.code === 'HTTP_404') {
+      throw new Error('404: 相册不存在')
+    } else {
+      throw new Error(`Failed to fetch session: ${error.message}`)
     }
   }
+}
 
 export default function SessionPage() {
   const [session, setSession] = useState<Session | null>(null)
@@ -73,7 +87,11 @@ export default function SessionPage() {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'featured' | 'recent'>('all')
+  const [sortOrder, setSortOrder] = useState<'upload_time' | 'capture_time' | 'file_name'>('upload_time')
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [needsAccessCode, setNeedsAccessCode] = useState(false)
+  const [accessCode, setAccessCode] = useState('')
+  const [accessCodeError, setAccessCodeError] = useState('')
   
   const { user } = useAuth()
   const { currentSession, photos: sessionPhotos } = useSession()
@@ -85,13 +103,43 @@ export default function SessionPage() {
     const loadSession = async () => {
       try {
         setIsLoading(true)
+        setNeedsAccessCode(false)
+        setAccessCodeError('')
+        
+        // 先检查是否有存储的访问码
+        const storedAccessCode = sessionStorage.getItem(`session_${sessionId}_access_code`)
+        
+        // 如果有存储的访问码，先尝试使用它
+        if (storedAccessCode) {
+          try {
+            const { session, photos } = await fetchSessionData(sessionId, storedAccessCode)
+            setSession(session)
+            setPhotos(photos)
+            return
+          } catch (error) {
+            // 如果存储的访问码失效，清除它并继续尝试其他方式
+            sessionStorage.removeItem(`session_${sessionId}_access_code`)
+            console.warn('Stored access code failed, trying without code')
+          }
+        }
+        
+        // 尝试不用访问码访问（用于公开相册或已登录用户）
         const { session, photos } = await fetchSessionData(sessionId)
         setSession(session)
         setPhotos(photos)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Load session failed:', error)
-        toast.error('加载会话失败')
-        router.push('/dashboard')
+        
+        // 如果是403错误，可能需要访问码
+        if (error.message.includes('403') || error.message.includes('无权访问')) {
+          setNeedsAccessCode(true)
+        } else if (error.message.includes('404')) {
+          toast.error('相册不存在')
+          router.push('/join')
+        } else {
+          toast.error('加载相册失败')
+          router.push('/join')
+        }
       } finally {
         setIsLoading(false)
       }
@@ -100,18 +148,59 @@ export default function SessionPage() {
     loadSession()
   }, [sessionId, router])
 
-  const filteredPhotos = photos.filter(photo => {
-    const matchesSearch = photo.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      photo.metadata.ai?.tags.some(tag => 
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    
-    const matchesFilter = filterStatus === 'all' || 
-      (filterStatus === 'featured' && photo.isFeatured) ||
-      (filterStatus === 'recent' && new Date(photo.createdAt) > new Date(Date.now() - 60 * 60 * 1000))
-    
-    return matchesSearch && matchesFilter
-  })
+  const handleAccessCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!accessCode.trim()) {
+      setAccessCodeError('请输入访问码')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setAccessCodeError('')
+      
+      const { session, photos } = await fetchSessionData(sessionId, accessCode.trim().toUpperCase())
+      setSession(session)
+      setPhotos(photos)
+      setNeedsAccessCode(false)
+      
+      // 保存访问码到 sessionStorage，以便后续API调用使用
+      sessionStorage.setItem(`session_${sessionId}_access_code`, accessCode.trim().toUpperCase())
+      
+    } catch (error: any) {
+      console.error('Access with code failed:', error)
+      setAccessCodeError('访问码错误或相册不存在')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const filteredAndSortedPhotos = photos
+    .filter(photo => {
+      const matchesSearch = photo.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        photo.metadata.ai?.tags.some(tag => 
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      
+      const matchesFilter = filterStatus === 'all' || 
+        (filterStatus === 'featured' && photo.isFeatured) ||
+        (filterStatus === 'recent' && new Date(photo.createdAt) > new Date(Date.now() - 60 * 60 * 1000))
+      
+      return matchesSearch && matchesFilter
+    })
+    .sort((a, b) => {
+      switch (sortOrder) {
+        case 'upload_time':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case 'capture_time':
+          // 使用创建时间作为拍摄时间的代替，因为metadata中可能没有拍摄时间
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        case 'file_name':
+          return a.filename.localeCompare(b.filename)
+        default:
+          return 0
+      }
+    })
 
   const handlePhotoAction = async (photoId: string, action: 'like' | 'download' | 'delete' | 'feature') => {
     try {
@@ -170,8 +259,74 @@ export default function SessionPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">加载会话中...</p>
+          <p className="text-gray-600">加载相册中...</p>
         </div>
+      </div>
+    )
+  }
+
+  // 需要访问码的界面
+  if (needsAccessCode) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Camera className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+            <CardTitle>需要访问码</CardTitle>
+            <CardDescription>
+              此相册需要访问码才能查看
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAccessCodeSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  访问码
+                </label>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                  placeholder="请输入访问码"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent uppercase"
+                  style={{ textTransform: 'uppercase' }}
+                  disabled={isLoading}
+                />
+                {accessCodeError && (
+                  <p className="text-sm text-red-600">{accessCodeError}</p>
+                )}
+              </div>
+              
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading || !accessCode.trim()}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>验证中...</span>
+                  </div>
+                ) : (
+                  '访问相册'
+                )}
+              </Button>
+            </form>
+            
+            <div className="mt-6 space-y-2">
+              <Button variant="outline" onClick={() => router.push('/join')} className="w-full">
+                返回加入页面
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/')} className="w-full">
+                返回首页
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -181,7 +336,7 @@ export default function SessionPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>会话不存在</CardTitle>
+            <CardTitle>相册不存在</CardTitle>
             <CardDescription>
               请检查访问码是否正确
             </CardDescription>
@@ -251,7 +406,7 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* 会话信息 */}
+      {/* 相册信息 */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-start justify-between">
@@ -262,7 +417,7 @@ export default function SessionPage() {
               <div className="flex items-center space-x-6 text-sm text-gray-500">
                 <div className="flex items-center space-x-1">
                   <User className="h-4 w-4" />
-                  <span>{session.photographer.displayName}</span>
+                  <span>{session.creatorDisplayName || session.creatorUsername || '未知摄影师'}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Clock className="h-4 w-4" />
@@ -294,14 +449,6 @@ export default function SessionPage() {
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{session.stats.totalViews}</div>
                 <div className="text-xs text-gray-500">总观看</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-500">{session.stats.totalLikes}</div>
-                <div className="text-xs text-gray-500">总点赞</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500">{session.stats.totalComments}</div>
-                <div className="text-xs text-gray-500">总评论</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-500">{session.stats.totalDownloads}</div>
@@ -336,6 +483,15 @@ export default function SessionPage() {
               <option value="featured">精选</option>
               <option value="recent">最新</option>
             </select>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as any)}
+              className="input w-40"
+            >
+              <option value="upload_time">按上传时间</option>
+              <option value="capture_time">按拍摄时间</option>
+              <option value="file_name">按文件名</option>
+            </select>
           </div>
           <div className="flex items-center space-x-2">
             <Button
@@ -356,7 +512,7 @@ export default function SessionPage() {
         </div>
 
         {/* 照片列表 */}
-        {filteredPhotos.length === 0 ? (
+        {filteredAndSortedPhotos.length === 0 ? (
           <div className="text-center py-12">
             <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -376,7 +532,7 @@ export default function SessionPage() {
             ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'
             : 'space-y-4'
           }>
-            {filteredPhotos.map((photo, index) => (
+                            {filteredAndSortedPhotos.map((photo, index) => (
               <motion.div
                 key={photo.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -411,12 +567,12 @@ export default function SessionPage() {
                         <span>{formatTime(photo.createdAt)}</span>
                         <div className="flex items-center space-x-2">
                           <span className="flex items-center space-x-1">
-                            <Heart className="h-3 w-3" />
-                            <span>{photo.stats.likes}</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
                             <Eye className="h-3 w-3" />
                             <span>{photo.stats.views}</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <Download className="h-3 w-3" />
+                            <span>{photo.stats.downloads}</span>
                           </span>
                         </div>
                       </div>

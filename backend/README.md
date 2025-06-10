@@ -4,14 +4,14 @@
 
 ## 🚀 项目概述
 
-Picture Live Backend 是一个基于 Node.js 的高性能后端服务，专为实时照片分享场景设计。支持摄影师实时上传照片，客户端实时查看和互动，提供完整的会话管理、用户认证、文件处理和实时通信功能。
+Picture Live Backend 是一个基于 Node.js 的高性能后端服务，专为实时照片分享场景设计。支持摄影师实时上传照片，客户端实时查看和互动，提供完整的相册管理、用户认证、文件处理和实时通信功能。
 
 ### 核心特性
 
-- 🔐 **完整的用户认证系统** - JWT + Redis 会话管理
+- 🔐 **完整的用户认证系统** - JWT + Redis 相册管理
 - 📸 **智能照片处理** - 多分辨率生成、水印添加、EXIF处理
 - ⚡ **实时通信** - WebSocket 支持实时消息和状态更新
-- 🎯 **会话管理** - 灵活的拍摄会话创建和访问控制
+- 🎯 **相册管理** - 灵活的拍摄相册创建和访问控制
 - 🛡️ **安全防护** - 速率限制、输入验证、SQL注入防护
 - 📊 **性能监控** - 详细的日志记录和性能指标
 - 🔄 **数据库迁移** - 自动化的数据库版本管理
@@ -50,7 +50,7 @@ backend/
 │   ├── routes/          # 路由定义
 │   │   ├── auth.js      # 认证路由
 │   │   ├── users.js     # 用户管理
-│   │   ├── sessions.js  # 会话管理
+│   │   ├── sessions.js  # 相册管理
 │   │   └── photos.js    # 照片管理
 │   ├── utils/           # 工具函数
 │   │   ├── logger.js    # 日志工具
@@ -151,13 +151,13 @@ POST /api/auth/logout       # 用户登出
 GET  /api/auth/profile      # 获取用户信息
 ```
 
-#### 会话管理
+#### 相册管理
 ```
-GET    /api/sessions        # 获取会话列表
-POST   /api/sessions        # 创建新会话
-GET    /api/sessions/:id    # 获取会话详情
-PUT    /api/sessions/:id    # 更新会话信息
-DELETE /api/sessions/:id    # 删除会话
+GET    /api/sessions        # 获取相册列表
+POST   /api/sessions        # 创建新相册
+GET    /api/sessions/:id    # 获取相册详情
+PUT    /api/sessions/:id    # 更新相册信息
+DELETE /api/sessions/:id    # 删除相册
 POST   /api/sessions/:id/verify # 验证访问码
 ```
 
@@ -183,10 +183,10 @@ GET    /api/users/stats     # 获取用户统计
 
 #### 客户端发送
 ```javascript
-// 加入会话
+// 加入相册
 socket.emit('join_session', { sessionId, accessCode });
 
-// 离开会话
+// 离开相册
 socket.emit('leave_session', { sessionId });
 
 // 发送消息

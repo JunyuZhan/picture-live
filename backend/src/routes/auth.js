@@ -80,10 +80,19 @@ const changePasswordValidation = [
  * 生成JWT令牌
  */
 function generateTokens(user) {
+    // 验证必要的环境变量
+    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+        logger.error('JWT secrets not configured properly');
+        throw new Error('JWT configuration error');
+    }
+    
     const payload = {
         userId: user.id,
         username: user.username,
-        role: user.role
+        email: user.email,
+        role: user.role,
+        isActive: user.is_active, // 添加用户激活状态
+        emailVerified: user.email_verified // 添加邮箱验证状态
     };
     
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -93,6 +102,15 @@ function generateTokens(user) {
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
     });
+    
+    // 只在开发环境记录非敏感信息
+    if (process.env.NODE_ENV === 'development') {
+        logger.debug('Token generated successfully', {
+            userId: user.id,
+            username: user.username,
+            tokenLength: accessToken ? accessToken.length : 0
+        });
+    }
     
     return { accessToken, refreshToken };
 }
@@ -224,7 +242,7 @@ router.post('/login', authLimiter, loginValidation, asyncHandler(async (req, res
         userAgent: req.get('User-Agent')
     });
     
-    res.json({
+    const responseData = {
         success: true,
         message: '登录成功',
         data: {
@@ -243,7 +261,9 @@ router.post('/login', authLimiter, loginValidation, asyncHandler(async (req, res
                 expiresIn: process.env.JWT_EXPIRES_IN || '1h'
             }
         }
-    });
+    };
+    
+    res.json(responseData);
 }));
 
 /**

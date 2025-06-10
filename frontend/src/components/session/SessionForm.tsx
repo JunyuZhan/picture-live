@@ -32,7 +32,7 @@ import { toast } from '@/hooks/use-toast'
 
 // 表单验证模式
 const sessionFormSchema = z.object({
-  title: z.string().min(1, '请输入会话标题').max(100, '标题不能超过100个字符'),
+  title: z.string().min(1, '请输入相册标题').max(100, '标题不能超过100个字符'),
   description: z.string().max(500, '描述不能超过500个字符').optional(),
   location: z.string().max(100, '地点不能超过100个字符').optional(),
   scheduledAt: z.string().optional(),
@@ -120,8 +120,8 @@ export function SessionForm({
       setIsOpen(false)
       form.reset()
       toast({
-        title: mode === 'create' ? "会话创建成功" : "会话更新成功",
-        description: mode === 'create' ? "新的拍摄会话已创建" : "会话设置已更新"
+        title: mode === 'create' ? "相册创建成功" : "相册更新成功",
+        description: mode === 'create' ? "新的拍摄相册已创建" : "相册设置已更新"
       })
     } catch (error) {
       toast({
@@ -159,7 +159,7 @@ export function SessionForm({
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>会话标题 *</FormLabel>
+                <FormLabel>相册标题 *</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="例如：婚礼现场拍摄、生日派对记录"
@@ -176,7 +176,7 @@ export function SessionForm({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>会话描述</FormLabel>
+                <FormLabel>相册描述</FormLabel>
                 <FormControl>
                   <textarea
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -260,7 +260,7 @@ export function SessionForm({
                   />
                 </FormControl>
                 <FormDescription>
-                  设置可以加入此会话的最大人数
+                  设置可以加入此相册的最大人数
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -276,7 +276,7 @@ export function SessionForm({
                   <div className="space-y-0.5">
                     <FormLabel className="text-base flex items-center gap-2">
                       {field.value ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      公开会话
+                      公开相册
                     </FormLabel>
                     <FormDescription>
                       其他用户可以发现并加入
@@ -459,7 +459,7 @@ export function SessionForm({
                       />
                     </FormControl>
                     <FormDescription>
-                      会话结束后多少天自动删除照片（留空表示不自动删除）
+                      相册结束后多少天自动删除照片（留空表示不自动删除）
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -535,7 +535,7 @@ export function SessionForm({
                         </div>
                       </FormControl>
                       <FormDescription>
-                        选择会话封面的主色调
+                        选择相册封面的主色调
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -567,7 +567,7 @@ export function SessionForm({
                 {mode === 'create' ? '创建中...' : '保存中...'}
               </div>
             ) : (
-              mode === 'create' ? '创建会话' : '保存更改'
+              mode === 'create' ? '创建相册' : '保存更改'
             )}
           </Button>
         </div>
@@ -585,7 +585,7 @@ export function SessionForm({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="w-5 h-5" />
-              {mode === 'create' ? '创建新会话' : '编辑会话'}
+              {mode === 'create' ? '创建新相册' : '编辑相册'}
             </DialogTitle>
           </DialogHeader>
           <FormContent />
@@ -599,7 +599,7 @@ export function SessionForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Camera className="w-5 h-5" />
-          {mode === 'create' ? '创建新会话' : '编辑会话'}
+          {mode === 'create' ? '创建新相册' : '编辑相册'}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -609,7 +609,7 @@ export function SessionForm({
   )
 }
 
-// 快速创建会话的简化组件
+// 快速创建相册的简化组件
 export function QuickSessionForm({ onSubmit, className }: {
   onSubmit: (data: { title: string; description?: string }) => Promise<void>
   className?: string
@@ -628,8 +628,8 @@ export function QuickSessionForm({ onSubmit, className }: {
       setTitle('')
       setDescription('')
       toast({
-        title: "会话创建成功",
-        description: "新的拍摄会话已创建"
+        title: "相册创建成功",
+        description: "新的拍摄相册已创建"
       })
     } catch (error) {
       toast({
@@ -647,13 +647,13 @@ export function QuickSessionForm({ onSubmit, className }: {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plus className="w-5 h-5" />
-          快速创建会话
+          快速创建相册
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="quick-title">会话标题 *</Label>
+            <Label htmlFor="quick-title">相册标题 *</Label>
             <Input
               id="quick-title"
               value={title}
@@ -687,7 +687,7 @@ export function QuickSessionForm({ onSubmit, className }: {
             ) : (
               <div className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
-                创建会话
+                创建相册
               </div>
             )}
           </Button>

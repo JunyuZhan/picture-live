@@ -15,8 +15,8 @@ async function generatePasswordHash() {
     
     console.log('🔐 生成密码哈希...');
     const hash = await bcrypt.hash(password, saltRounds);
-    console.log(`密码: ${password}`);
-    console.log(`哈希: ${hash}`);
+    // 不输出敏感信息到控制台
+    console.log('密码哈希生成完成');
     
     return hash;
 }

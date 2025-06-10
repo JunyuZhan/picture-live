@@ -3,17 +3,23 @@ const logger = require('../utils/logger')
 // 错误处理中间件
 function errorHandler(err, req, res, next) {
   // 记录错误日志
-  logger.error('Unhandled error:', {
+  const logData = {
     message: err.message,
     stack: err.stack,
     url: req.originalUrl,
     method: req.method,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    body: req.body,
     params: req.params,
     query: req.query
-  })
+  };
+  
+  // 只在开发环境记录请求体，避免生产环境泄露敏感信息
+  if (process.env.NODE_ENV === 'development') {
+    logData.body = req.body;
+  }
+  
+  logger.error('Unhandled error:', logData);
 
   // 默认错误响应
   let statusCode = 500

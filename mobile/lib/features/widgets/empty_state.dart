@@ -163,9 +163,9 @@ class NoSessionsEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return EmptyState(
       icon: Icons.group_outlined,
-      title: '暂无会话',
-      subtitle: '创建您的第一个会话开始分享吧！',
-      actionText: onCreate != null ? '创建会话' : null,
+      title: '暂无相册',
+      subtitle: '创建您的第一个相册开始分享吧！',
+      actionText: onCreate != null ? '创建相册' : null,
       onAction: onCreate,
     );
   }

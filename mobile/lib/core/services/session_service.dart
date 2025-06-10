@@ -9,7 +9,7 @@ class SessionService {
   
   SessionService(this._apiClient);
   
-  /// 获取会话列表
+  /// 获取相册列表
   Future<ApiResponse<List<Session>>> getSessions({
     int page = 1,
     int limit = AppConfig.defaultPageSize,
@@ -42,15 +42,15 @@ class SessionService {
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '获取会话列表失败',
+        message: e.message ?? '获取相册列表失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '获取会话列表失败: $e');
+      return ApiResponse.error(message: '获取相册列表失败: $e');
     }
   }
   
-  /// 获取单个会话详情
+  /// 获取单个相册详情
   Future<ApiResponse<Session>> getSession(String sessionId) async {
     try {
       final response = await _apiClient.get(
@@ -65,15 +65,15 @@ class SessionService {
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '获取会话详情失败',
+        message: e.message ?? '获取相册详情失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '获取会话详情失败: $e');
+      return ApiResponse.error(message: '获取相册详情失败: $e');
     }
   }
   
-  /// 创建新会话
+  /// 创建新相册
   Future<ApiResponse<Session>> createSession({
     required String name,
     String? description,
@@ -103,19 +103,19 @@ class SessionService {
       
       return ApiResponse.success(
         data: session,
-        message: response.data['message'] ?? '会话创建成功',
+        message: response.data['message'] ?? '相册创建成功',
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '创建会话失败',
+        message: e.message ?? '创建相册失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '创建会话失败: $e');
+      return ApiResponse.error(message: '创建相册失败: $e');
     }
   }
   
-  /// 更新会话
+  /// 更新相册
   Future<ApiResponse<Session>> updateSession(
     String sessionId, {
     String? name,
@@ -148,19 +148,19 @@ class SessionService {
       
       return ApiResponse.success(
         data: session,
-        message: response.data['message'] ?? '会话更新成功',
+        message: response.data['message'] ?? '相册更新成功',
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '更新会话失败',
+        message: e.message ?? '更新相册失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '更新会话失败: $e');
+      return ApiResponse.error(message: '更新相册失败: $e');
     }
   }
   
-  /// 删除会话
+  /// 删除相册
   Future<ApiResponse<void>> deleteSession(String sessionId) async {
     try {
       final response = await _apiClient.delete(
@@ -168,19 +168,19 @@ class SessionService {
       );
       
       return ApiResponse.success(
-        message: response.data['message'] ?? '会话删除成功',
+        message: response.data['message'] ?? '相册删除成功',
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '删除会话失败',
+        message: e.message ?? '删除相册失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '删除会话失败: $e');
+      return ApiResponse.error(message: '删除相册失败: $e');
     }
   }
   
-  /// 加入会话
+  /// 加入相册
   Future<ApiResponse<Session>> joinSession(
     String sessionId, {
     String? password,
@@ -198,19 +198,19 @@ class SessionService {
       
       return ApiResponse.success(
         data: session,
-        message: response.data['message'] ?? '加入会话成功',
+        message: response.data['message'] ?? '加入相册成功',
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '加入会话失败',
+        message: e.message ?? '加入相册失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '加入会话失败: $e');
+      return ApiResponse.error(message: '加入相册失败: $e');
     }
   }
   
-  /// 离开会话
+  /// 离开相册
   Future<ApiResponse<void>> leaveSession(String sessionId) async {
     try {
       final response = await _apiClient.post(
@@ -218,19 +218,19 @@ class SessionService {
       );
       
       return ApiResponse.success(
-        message: response.data['message'] ?? '离开会话成功',
+        message: response.data['message'] ?? '离开相册成功',
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '离开会话失败',
+        message: e.message ?? '离开相册失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '离开会话失败: $e');
+      return ApiResponse.error(message: '离开相册失败: $e');
     }
   }
   
-  /// 获取会话成员
+  /// 获取相册成员
   Future<ApiResponse<List<SessionMember>>> getSessionMembers(
     String sessionId, {
     int page = 1,
@@ -260,15 +260,15 @@ class SessionService {
       );
     } on DioException catch (e) {
       return ApiResponse.error(
-        message: e.message ?? '获取会话成员失败',
+        message: e.message ?? '获取相册成员失败',
         statusCode: e.response?.statusCode,
       );
     } catch (e) {
-      return ApiResponse.error(message: '获取会话成员失败: $e');
+      return ApiResponse.error(message: '获取相册成员失败: $e');
     }
   }
   
-  /// 邀请用户加入会话
+  /// 邀请用户加入相册
   Future<ApiResponse<void>> inviteUser(
     String sessionId,
     String userId,
@@ -292,7 +292,7 @@ class SessionService {
     }
   }
   
-  /// 移除会话成员
+  /// 移除相册成员
   Future<ApiResponse<void>> removeMember(
     String sessionId,
     String userId,

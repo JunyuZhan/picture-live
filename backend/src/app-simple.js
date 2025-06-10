@@ -35,7 +35,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 模拟会话API
+// 模拟相册API
 app.get('/api/sessions', (req, res) => {
   res.json({
     success: true,
@@ -43,8 +43,8 @@ app.get('/api/sessions', (req, res) => {
       sessions: [
         {
           id: '1',
-          title: '测试会话',
-          description: '这是一个测试会话',
+          title: '测试相册',
+          description: '这是一个测试相册',
           status: 'live',
           type: 'event',
           accessCode: 'TEST2024',
@@ -89,14 +89,14 @@ app.get('/api/sessions', (req, res) => {
   });
 });
 
-// 创建会话API
+// 创建相册API
 app.post('/api/sessions', (req, res) => {
   const { title, description, isPublic = false } = req.body;
   
   if (!title) {
     return res.status(400).json({
       success: false,
-      message: '会话标题不能为空'
+      message: '相册标题不能为空'
     });
   }
   
@@ -116,19 +116,19 @@ app.post('/api/sessions', (req, res) => {
   
   res.status(201).json({
     success: true,
-    message: '会话创建成功',
+    message: '相册创建成功',
     data: { session }
   });
 });
 
-// 获取单个会话
+// 获取单个相册
 app.get('/api/sessions/:id', (req, res) => {
   const { id } = req.params;
   
   const session = {
     id,
-    title: '测试会话',
-    description: '这是一个测试会话',
+    title: '测试相册',
+    description: '这是一个测试相册',
     status: 'active',
     isPublic: true,
     accessCode: 'TEST2024',

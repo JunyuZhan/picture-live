@@ -163,19 +163,19 @@ export function SessionProvider({ children }: SessionProviderProps) {
         break
         
       case 'session_ended':
-        toast.success('会话已结束')
+        toast.success('相册已结束')
         leaveSession()
         break
         
       case 'user_joined':
         if (data.user) {
-          toast.success(`${data.user.displayName || data.user.username} 加入了会话`)
+          toast.success(`${data.user.displayName || data.user.username} 加入了相册`)
         }
         break
         
       case 'user_left':
         if (data.user) {
-          toast.success(`${data.user.displayName || data.user.username} 离开了会话`)
+          toast.success(`${data.user.displayName || data.user.username} 离开了相册`)
         }
         break
         
@@ -221,11 +221,11 @@ export function SessionProvider({ children }: SessionProviderProps) {
       const session = await sessionApi.createSession(data)
       
       setCurrentSession(session)
-      toast.success('会话创建成功！')
+      toast.success('相册创建成功！')
       
       return session
     } catch (error: any) {
-      const message = error.response?.data?.message || '创建会话失败'
+      const message = error.response?.data?.message || '创建相册失败'
       toast.error(message)
       throw error
     } finally {
@@ -236,18 +236,18 @@ export function SessionProvider({ children }: SessionProviderProps) {
   const joinSession = async (accessCode: string, displayName?: string) => {
     try {
       setIsLoading(true)
-      const response = await sessionApi.joinSession({ sessionId: '', accessCode })
+      const response = await sessionApi.joinSession({ accessCode })
       
       setCurrentSession(response.session)
       
-      // 获取会话照片
+      // 获取相册照片
       const sessionPhotos = await photoApi.getSessionPhotos(response.session.id)
       setPhotos(sessionPhotos.photos)
       
-      toast.success(`已加入会话: ${response.session.title}`)
+      toast.success(`已加入相册: ${response.session.title}`)
       router.push(`/session/${response.session.id}`)
     } catch (error: any) {
-      const message = error.response?.data?.message || '加入会话失败'
+      const message = error.response?.data?.message || '加入相册失败'
       toast.error(message)
       throw error
     } finally {
@@ -267,9 +267,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
     try {
       const updatedSession = await sessionApi.updateSession(sessionId, { settings: data as SessionSettings })
       setCurrentSession(updatedSession)
-      toast.success('会话设置已更新')
+      toast.success('相册设置已更新')
     } catch (error: any) {
-      const message = error.response?.data?.message || '更新会话失败'
+      const message = error.response?.data?.message || '更新相册失败'
       toast.error(message)
       throw error
     }
@@ -283,9 +283,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
         leaveSession()
       }
       
-      toast.success('会话已删除')
+      toast.success('相册已删除')
     } catch (error: any) {
-      const message = error.response?.data?.message || '删除会话失败'
+      const message = error.response?.data?.message || '删除相册失败'
       toast.error(message)
       throw error
     }
@@ -300,9 +300,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
         setCurrentSession(prev => prev ? { ...prev, status: 'paused' } : null)
       }
       
-      toast.success('会话已暂停')
+      toast.success('相册已暂停')
     } catch (error: any) {
-      const message = error.response?.data?.message || '暂停会话失败'
+      const message = error.response?.data?.message || '暂停相册失败'
       toast.error(message)
       throw error
     }
@@ -316,9 +316,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
         setCurrentSession(prev => prev ? { ...prev, status: 'live' } : null)
       }
       
-      toast.success('会话已恢复')
+      toast.success('相册已恢复')
     } catch (error: any) {
-      const message = error.response?.data?.message || '恢复会话失败'
+      const message = error.response?.data?.message || '恢复相册失败'
       toast.error(message)
       throw error
     }
@@ -332,9 +332,9 @@ export function SessionProvider({ children }: SessionProviderProps) {
         setCurrentSession(prev => prev ? { ...prev, status: 'ended' } : null)
       }
       
-      toast.success('会话已结束')
+      toast.success('相册已结束')
     } catch (error: any) {
-      const message = error.response?.data?.message || '结束会话失败'
+      const message = error.response?.data?.message || '结束相册失败'
       toast.error(message)
       throw error
     }

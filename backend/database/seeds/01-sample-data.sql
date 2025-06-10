@@ -12,7 +12,7 @@ INSERT INTO users (id, username, email, password_hash, display_name, avatar_url,
 ('550e8400-e29b-41d4-a716-446655440003', 'testuser', 'testuser@example.com', '$2a$12$S6Ry0tDbx2n6BAw48Y6aEuUCbRnCCF2xmk.QR.smlYNh5s/uK5FE2', '测试用户', '/avatars/testuser.jpg', 'photographer', true, false)
 ON CONFLICT (id) DO NOTHING;
 
--- 插入测试会话
+-- 插入测试相册
 INSERT INTO sessions (id, user_id, title, description, access_code, is_public, status, settings, watermark_enabled, watermark_text, review_mode, auto_tag_enabled, language, started_at) VALUES
 ('660e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', '婚礼现场直播', '张先生和李女士的婚礼现场照片直播，记录美好时刻', 'WEDDING2024', false, 'active', 
  '{
@@ -55,7 +55,7 @@ INSERT INTO sessions (id, user_id, title, description, access_code, is_public, s
  false, '', false, true, 'zh-CN', CURRENT_TIMESTAMP - INTERVAL '5 hours')
 ON CONFLICT (id) DO NOTHING;
 
--- 更新会话结束时间
+-- 更新相册结束时间
 UPDATE sessions SET ended_at = CURRENT_TIMESTAMP - INTERVAL '1 hour' WHERE id = '660e8400-e29b-41d4-a716-446655440004';
 
 -- 插入测试照片
@@ -185,7 +185,7 @@ INSERT INTO photos (id, session_id, user_id, filename, original_filename, file_p
  '{"毕业", "典礼", "学生", "成就", "未来"}', '{"人物", "室外", "正式", "庆祝"}', '{"毕业典礼"}', '毕业', 'published', 'approved', false, 67, 1, true, CURRENT_TIMESTAMP - INTERVAL '5 hours', CURRENT_TIMESTAMP - INTERVAL '5 hours', CURRENT_TIMESTAMP - INTERVAL '4 hours 30 minutes')
 ON CONFLICT (id) DO NOTHING;
 
--- 插入会话访问记录
+-- 插入相册访问记录
 INSERT INTO session_access_logs (session_id, ip_address, user_agent, access_code_used, access_granted, client_type, session_duration, pages_viewed, photos_viewed) VALUES
 ('660e8400-e29b-41d4-a716-446655440001', '192.168.1.100', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'WEDDING2024', true, 'viewer', 1800, 5, 15),
 ('660e8400-e29b-41d4-a716-446655440001', '192.168.1.101', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', 'WEDDING2024', true, 'viewer', 2400, 3, 12),
@@ -212,7 +212,7 @@ INSERT INTO api_keys (user_id, key_name, api_key, permissions, is_active, expire
 ('550e8400-e29b-41d4-a716-446655440002', '第三方集成', 'pk_test_abcdef1234567890abcdef1234567890abcdef12', '{"sessions:read", "photos:read"}', true, CURRENT_TIMESTAMP + INTERVAL '6 months'),
 ('550e8400-e29b-41d4-a716-446655440001', '备用密钥', 'pk_backup_9876543210fedcba9876543210fedcba98765432', '{"sessions:read", "photos:read", "photos:upload"}', false, CURRENT_TIMESTAMP + INTERVAL '3 months');
 
--- 更新会话统计信息（触发器会自动更新，这里手动确保数据一致性）
+-- 更新相册统计信息（触发器会自动更新，这里手动确保数据一致性）
 UPDATE sessions SET 
     total_photos = (SELECT COUNT(*) FROM photos WHERE session_id = sessions.id),
     published_photos = (SELECT COUNT(*) FROM photos WHERE session_id = sessions.id AND status = 'published'),
@@ -244,7 +244,7 @@ BEGIN
         )
     );
     
-    -- 重置会话统计
+    -- 重置相册统计
     UPDATE sessions SET 
         total_views = (SELECT COALESCE(SUM(view_count), 0) FROM photos WHERE session_id = sessions.id),
         unique_viewers = FLOOR(RANDOM() * 50) + 1

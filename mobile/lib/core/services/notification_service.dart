@@ -291,11 +291,11 @@ class NotificationService {
     required String inviterName,
   }) async {
     await showNotification(
-      title: '会话邀请',
+      title: '相册邀请',
       body: '$inviterName 邀请您加入「$sessionName」',
       channelId: 'session_invite',
-      channelName: '会话邀请',
-      channelDescription: '会话邀请通知',
+      channelName: '相册邀请',
+      channelDescription: '相册邀请通知',
       priority: NotificationPriority.high,
     );
   }

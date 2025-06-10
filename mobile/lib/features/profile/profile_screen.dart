@@ -430,7 +430,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             controller: _tabController,
             tabs: const [
               Tab(text: '照片'),
-              Tab(text: '会话'),
+              Tab(text: '相册'),
               Tab(text: '关于'),
             ],
           ),
@@ -654,7 +654,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildStatItem('照片', _totalPhotos),
-          _buildStatItem('会话', _totalSessions),
+          _buildStatItem('相册', _totalSessions),
           _buildStatItem('获赞', _totalLikes),
         ],
       ),
@@ -735,8 +735,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     if (_userSessions.isEmpty) {
       return NoSessionsEmptyState(
-        message: widget.isCurrentUser ? '还没有创建会话' : '该用户还没有创建会话',
-        actionText: widget.isCurrentUser ? '创建第一个会话' : null,
+        message: widget.isCurrentUser ? '还没有创建相册' : '该用户还没有创建相册',
+        actionText: widget.isCurrentUser ? '创建第一个相册' : null,
         onActionPressed: widget.isCurrentUser
             ? () {
                 Navigator.pushNamed(context, '/create-session');
@@ -798,7 +798,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           const SizedBox(height: 12),
           
           _buildAboutItem('上传照片', '$_totalPhotos 张'),
-          _buildAboutItem('创建会话', '$_totalSessions 个'),
+          _buildAboutItem('创建相册', '$_totalSessions 个'),
           _buildAboutItem('获得点赞', '$_totalLikes 次'),
         ],
       ),

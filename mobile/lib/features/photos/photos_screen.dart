@@ -490,7 +490,7 @@ class _PhotosScreenState extends State<PhotosScreen>
     
     return Scaffold(
       appBar: CustomAppBar(
-        title: widget.sessionId != null ? '会话照片' : '照片',
+        title: widget.sessionId != null ? '相册照片' : '照片',
         actions: [
           IconButton(
             icon: Icon(_isGridView ? Icons.list : Icons.grid_view),

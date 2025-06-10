@@ -41,7 +41,7 @@ export default function LoginPage() {
   })
 
   useEffect(() => {
-    // 检查是否因为会话过期而重定向到登录页
+    // 检查是否因为相册过期而重定向到登录页
     if (searchParams.get('session_expired') === 'true') {
       setSessionExpired(true)
     }
@@ -51,7 +51,7 @@ export default function LoginPage() {
     try {
       setIsLoading(true)
       await login({ email: data.email, password: data.password })
-      // 登录成功后清除会话过期状态和 URL 参数
+      // 登录成功后清除相册过期状态和 URL 参数
       setSessionExpired(false)
       if (searchParams.get('session_expired') === 'true') {
         router.replace('/login')
@@ -88,7 +88,7 @@ export default function LoginPage() {
             {sessionExpired && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
                 <p className="text-amber-800 text-sm">
-                  您的会话已过期，请重新登录
+                  您的相册已过期，请重新登录
                 </p>
               </div>
             )}

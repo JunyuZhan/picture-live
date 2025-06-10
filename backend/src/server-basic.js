@@ -71,7 +71,7 @@ function handleRequest(req, res) {
     return;
   }
 
-  // 获取会话列表
+  // 获取相册列表
   if (pathname === '/api/sessions' && method === 'GET') {
     sendJSON(res, 200, {
       success: true,
@@ -79,8 +79,8 @@ function handleRequest(req, res) {
         sessions: [
           {
             id: '1',
-            title: '测试会话',
-            description: '这是一个测试会话',
+            title: '测试相册',
+            description: '这是一个测试相册',
             status: 'active',
             isPublic: true,
             accessCode: 'TEST2024',
@@ -102,7 +102,7 @@ function handleRequest(req, res) {
     return;
   }
 
-  // 创建会话
+  // 创建相册
   if (pathname === '/api/sessions' && method === 'POST') {
     parseBody(req, (err, data) => {
       if (err) {
@@ -118,7 +118,7 @@ function handleRequest(req, res) {
       if (!title) {
         sendJSON(res, 400, {
           success: false,
-          message: '会话标题不能为空'
+          message: '相册标题不能为空'
         });
         return;
       }
@@ -139,21 +139,21 @@ function handleRequest(req, res) {
       
       sendJSON(res, 201, {
         success: true,
-        message: '会话创建成功',
+        message: '相册创建成功',
         data: { session }
       });
     });
     return;
   }
 
-  // 获取单个会话
+  // 获取单个相册
   if (pathname.startsWith('/api/sessions/') && method === 'GET') {
     const sessionId = pathname.split('/')[3];
     
     const session = {
       id: sessionId,
-      title: '测试会话',
-      description: '这是一个测试会话',
+      title: '测试相册',
+      description: '这是一个测试相册',
       status: 'active',
       isPublic: true,
       accessCode: 'TEST2024',

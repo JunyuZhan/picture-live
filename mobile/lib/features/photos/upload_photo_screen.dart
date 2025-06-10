@@ -72,10 +72,10 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
           .toList();
     }
     
-    // 加载可用会话
+    // 加载可用相册
     await _loadAvailableSessions();
     
-    // 如果指定了会话ID，设置为选中状态
+    // 如果指定了相册ID，设置为选中状态
     if (widget.sessionId != null) {
       _selectedSession = _availableSessions
           .where((session) => session.id == widget.sessionId)
@@ -107,7 +107,7 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = '加载会话列表失败: ${e.toString()}';
+        _error = '加载相册列表失败: ${e.toString()}';
         _isLoadingSessions = false;
       });
     }
@@ -229,7 +229,7 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
     }
     
     if (_selectedSession == null) {
-      _showErrorSnackBar('请选择要上传到的会话');
+      _showErrorSnackBar('请选择要上传到的相册');
       return;
     }
     
@@ -340,7 +340,7 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
                     
                     const SizedBox(height: 24),
                     
-                    // 会话选择
+                    // 相册选择
                     _buildSessionSection(),
                     
                     const SizedBox(height: 24),
@@ -489,7 +489,7 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '选择会话',
+          '选择相册',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -520,8 +520,8 @@ class _UploadPhotoScreenState extends ConsumerState<UploadPhotoScreen> {
           Card(
             child: ListTile(
               leading: const Icon(Icons.add),
-              title: const Text('选择会话'),
-              subtitle: const Text('选择要上传照片的会话'),
+              title: const Text('选择相册'),
+              subtitle: const Text('选择要上传照片的相册'),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: _selectSession,
             ),
@@ -747,13 +747,13 @@ class _SessionSelectionDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('选择会话'),
+      title: const Text('选择相册'),
       content: SizedBox(
         width: double.maxFinite,
         height: 400,
         child: sessions.isEmpty
             ? const Center(
-                child: Text('暂无可用会话'),
+                child: Text('暂无可用相册'),
               )
             : ListView.builder(
                 itemCount: sessions.length,

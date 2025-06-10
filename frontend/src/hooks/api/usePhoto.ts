@@ -33,7 +33,7 @@ export function usePhoto(photoId: string) {
 }
 
 /**
- * 获取会话照片列表
+ * 获取相册照片列表
  */
 export function useSessionPhotos(
   sessionId: string,
@@ -80,7 +80,7 @@ export function useUploadPhoto() {
       }
     }) => photoApi.uploadPhoto(sessionId, file, options),
     onSuccess: (photo: Photo, variables) => {
-      // 更新会话照片列表缓存
+      // 更新相册照片列表缓存
       queryClient.invalidateQueries({
         queryKey: ['sessions', variables.sessionId, 'photos'],
       })
@@ -119,7 +119,7 @@ export function useUploadPhotos() {
       }
     }) => photoApi.uploadPhotos(sessionId, files, options),
     onSuccess: (photos: Photo[], variables) => {
-      // 更新会话照片列表缓存
+      // 更新相册照片列表缓存
       queryClient.invalidateQueries({
         queryKey: ['sessions', variables.sessionId, 'photos'],
       })

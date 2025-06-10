@@ -93,7 +93,7 @@ export function PhotoGallery({
   
   const { user } = useAuth()
   
-  // 判断当前用户是否为会话所有者
+  // 判断当前用户是否为相册所有者
   const isOwner = user && currentSession && user.id === currentSession.photographer.id
 
   // 过滤和排序照片

@@ -460,7 +460,7 @@ router.get('/me/stats', authenticateToken, asyncHandler(async (req, res) => {
     
     // 查询统计信息
     const statsQueries = await Promise.all([
-        // 会话统计
+        // 相册统计
         db.query(
             `SELECT 
                 COUNT(*) as total_sessions,
@@ -565,9 +565,8 @@ router.get('/', authenticateToken, requireRole('admin'), asyncHandler(async (req
     let paramIndex = 1;
     
     if (search) {
-        whereClause += ` AND (username ILIKE $${paramIndex} OR email ILIKE $${paramIndex} OR display_name ILIKE $${paramIndex})`;
-        params.push(`%${search}%`);
-        paramIndex++;
+        whereClause += ` AND (username ILIKE $${paramIndex++} OR email ILIKE $${paramIndex++} OR display_name ILIKE $${paramIndex++})`;
+        params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
     
     if (role) {
@@ -701,7 +700,7 @@ router.delete('/me', authenticateToken, asyncHandler(async (req, res) => {
         throw new AppError('密码错误', 400);
     }
     
-    // 检查是否有活跃的会话
+    // 检查是否有活跃的相册
     const activeSessionsResult = await db.query(
         'SELECT COUNT(*) as count FROM sessions WHERE user_id = $1 AND status = \'active\'',
         [userId]
@@ -710,7 +709,7 @@ router.delete('/me', authenticateToken, asyncHandler(async (req, res) => {
     const activeSessionsCount = parseInt(activeSessionsResult.rows[0].count);
     
     if (activeSessionsCount > 0) {
-        throw new AppError('请先结束所有活跃的会话再删除账户', 400);
+        throw new AppError('请先结束所有活跃的相册再删除账户', 400);
     }
     
     // 开始事务删除用户数据

@@ -13,7 +13,7 @@ interface AppState {
   isAuthenticated: boolean
   isLoading: boolean
   
-  // 当前会话状态
+  // 当前相册状态
   currentSession: Session | null
   sessionPhotos: Photo[]
   sessionParticipants: any[]
@@ -42,7 +42,7 @@ interface AppActions {
   setAuthenticated: (authenticated: boolean) => void
   setLoading: (loading: boolean) => void
   
-  // 会话操作
+  // 相册操作
   setCurrentSession: (session: Session | null) => void
   addPhoto: (photo: Photo) => void
   updatePhoto: (photoId: string, updates: Partial<Photo>) => void
@@ -111,7 +111,7 @@ const initialState: AppState = {
   isAuthenticated: false,
   isLoading: true,
   
-  // 会话状态
+  // 相册状态
   currentSession: null,
   sessionPhotos: [],
   sessionParticipants: [],
@@ -154,7 +154,7 @@ export const useAppStore = create<AppState & AppActions>()(
           state.isLoading = loading
         }),
         
-        // 会话操作
+        // 相册操作
         setCurrentSession: (session) => set((state) => {
           state.currentSession = session
           if (!session) {
@@ -338,7 +338,7 @@ export const useAppActions = () => useAppStore((state) => ({
   setAuthenticated: state.setAuthenticated,
   setLoading: state.setLoading,
   
-  // 会话操作
+  // 相册操作
   setCurrentSession: state.setCurrentSession,
   addPhoto: state.addPhoto,
   updatePhoto: state.updatePhoto,

@@ -18,6 +18,8 @@ const socketHandler = require('./socket/socketHandler')
 const sessionRoutes = require('./routes/sessions')
 const photoRoutes = require('./routes/photos')
 const authRoutes = require('./routes/auth')
+const usersRoutes = require('./routes/users')
+const systemRoutes = require('./routes/system')
 const healthRoutes = require('./routes/health')
 
 const app = express()
@@ -60,6 +62,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')))
 app.use('/api/auth', authRoutes)
 app.use('/api/sessions', sessionRoutes)
 app.use('/api/photos', photoRoutes)
+app.use('/api/users', usersRoutes)
+app.use('/api/system', systemRoutes)
 app.use('/health', healthRoutes)
 
 // Socket.IO处理

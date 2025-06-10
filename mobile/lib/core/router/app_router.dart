@@ -69,7 +69,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HomeScreen(),
       ),
       
-      // 会话相关路由
+      // 相册相关路由
       GoRoute(
         path: '/sessions',
         name: 'sessions',

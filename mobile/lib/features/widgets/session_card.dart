@@ -55,12 +55,12 @@ class SessionCard extends StatelessWidget {
   Widget _buildCompactContent(ThemeData theme) {
     return Row(
       children: [
-        // 会话头像/图标
+        // 相册头像/图标
         _buildSessionAvatar(theme),
         
         const SizedBox(width: 12),
         
-        // 会话信息
+        // 相册信息
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +243,7 @@ class SessionCard extends StatelessWidget {
               if (onJoin != null)
                 Expanded(
                   child: CustomButton(
-                    text: '加入会话',
+                    text: '加入相册',
                     onPressed: onJoin,
                     icon: Icons.login,
                   ),
@@ -253,7 +253,7 @@ class SessionCard extends StatelessWidget {
               if (onLeave != null)
                 Expanded(
                   child: CustomButton(
-                    text: '离开会话',
+                    text: '离开相册',
                     onPressed: onLeave,
                     icon: Icons.logout,
                     isOutlined: true,
@@ -368,7 +368,7 @@ class SessionCard extends StatelessWidget {
       return CustomIconButton(
         icon: Icons.login,
         onPressed: onJoin,
-        tooltip: '加入会话',
+        tooltip: '加入相册',
         backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
         iconColor: theme.colorScheme.primary,
       );
@@ -378,7 +378,7 @@ class SessionCard extends StatelessWidget {
       return CustomIconButton(
         icon: Icons.logout,
         onPressed: onLeave,
-        tooltip: '离开会话',
+        tooltip: '离开相册',
         backgroundColor: theme.colorScheme.error.withOpacity(0.1),
         iconColor: theme.colorScheme.error,
       );
@@ -405,7 +405,7 @@ class SessionCard extends StatelessWidget {
   }
 }
 
-// 会话列表项组件
+// 相册列表项组件
 class SessionListTile extends StatelessWidget {
   final Session session;
   final VoidCallback? onTap;

@@ -4,11 +4,11 @@
   
   <!-- 主要图标组 -->
   <g transform="translate(100, 100)">
-    <!-- 会话气泡1 -->
+    <!-- 相册气泡1 -->
     <rect x="-35" y="-25" width="50" height="30" rx="15" fill="#E5E7EB"/>
     <polygon points="-35,-10 -40,-5 -35,-5" fill="#E5E7EB"/>
     
-    <!-- 会话气泡2 -->
+    <!-- 相册气泡2 -->
     <rect x="-15" y="-5" width="45" height="25" rx="12" fill="#D1D5DB"/>
     <polygon points="30,-5 35,0 30,0" fill="#D1D5DB"/>
     

@@ -22,7 +22,7 @@ function socketHandler(io) {
       ip: socket.handshake.address
     })
     
-    // 加入拍摄会话房间
+    // 加入拍摄相册房间
     socket.on('join-session', async (data) => {
       try {
         const { sessionId, clientType, accessCode } = data
@@ -32,7 +32,7 @@ function socketHandler(io) {
           return
         }
         
-        // 验证会话是否存在（这里需要实现会话验证逻辑）
+        // 验证相册是否存在（这里需要实现相册验证逻辑）
         // const session = await validateSession(sessionId, accessCode)
         
         // 更新客户端信息
@@ -87,7 +87,7 @@ function socketHandler(io) {
       }
     })
     
-    // 离开拍摄会话房间
+    // 离开拍摄相册房间
     socket.on('leave-session', async (data) => {
       try {
         const { sessionId } = data
@@ -285,7 +285,7 @@ function socketHandler(io) {
         clientType: clientInfo?.clientType
       })
       
-      // 如果客户端在某个会话中，通知其他客户端
+      // 如果客户端在某个相册中，通知其他客户端
       if (clientInfo?.sessionId) {
         socket.to(clientInfo.sessionId).emit('user-left', {
           socketId: socket.id,

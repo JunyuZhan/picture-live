@@ -39,7 +39,7 @@ interface UploadFile {
   isFeatured?: boolean
 }
 
-// 从API获取会话数据
+// 从API获取相册数据
 const fetchSession = async (sessionId: string): Promise<Session> => {
   try {
     const response = await fetch(`http://localhost:3001/api/sessions/${sessionId}`)
@@ -76,7 +76,7 @@ export default function UploadPage() {
         setSession(sessionData)
       } catch (error) {
         console.error('Load session failed:', error)
-        toast.error('加载会话失败')
+        toast.error('加载相册失败')
         router.push('/dashboard')
       } finally {
         setIsLoading(false)
@@ -248,7 +248,7 @@ export default function UploadPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">加载会话中...</p>
+          <p className="text-gray-600">加载相册中...</p>
         </div>
       </div>
     )
@@ -259,9 +259,9 @@ export default function UploadPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>会话不存在</CardTitle>
+            <CardTitle>相册不存在</CardTitle>
             <CardDescription>
-              请检查会话ID是否正确
+              请检查相册ID是否正确
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -288,7 +288,7 @@ export default function UploadPage() {
             <div className="flex items-center space-x-4">
               <Link href={`/session/${sessionId}`} className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
                 <ChevronLeft className="h-5 w-5" />
-                <span>返回会话</span>
+                <span>返回相册</span>
               </Link>
             </div>
             <div className="flex items-center space-x-4">
@@ -303,7 +303,7 @@ export default function UploadPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">上传照片</h1>
-          <p className="text-gray-600">为会话「{session.title}」上传新照片</p>
+          <p className="text-gray-600">为相册「{session.title}」上传新照片</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -534,10 +534,10 @@ export default function UploadPage() {
               </CardContent>
             </Card>
 
-            {/* 会话信息 */}
+            {/* 相册信息 */}
             <Card>
               <CardHeader>
-                <CardTitle>会话信息</CardTitle>
+                <CardTitle>相册信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
